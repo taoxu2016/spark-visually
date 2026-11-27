@@ -14,7 +14,7 @@ shares. The blueprint plans 19 modules in three parts. Every dataset is simulate
 | 3 · Nothing Happens Until You Ask | Approved and reviewed; cut 3:15 |
 | 4 · Cut at the Walls | Approved and reviewed; cut 4:33 |
 | 5 · Everyone Sends to Everyone | Approved and reviewed; cut 4:54 (the pilot) |
-| 6 · Say What, Not How | Next |
+| 6 · Say What, Not How | Script draft 1, in review (pull request) |
 
 The review cuts, built in the cloud from this repository, are on the [Review cuts](../../releases/tag/review-cuts) release.
 

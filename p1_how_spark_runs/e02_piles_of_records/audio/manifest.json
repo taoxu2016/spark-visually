@@ -1,0 +1,315 @@
+{
+ "s1_1": {
+  "scene": "S01_ColdOpen",
+  "file": "audio/segments/s1_1.wav",
+  "duration": 14.337,
+  "sentences": [
+   {
+    "text": "Last time, our count read the table with 4 tasks on 8 cores. Here's a worse case: the same 103 patients, written as one file.",
+    "start": 0.0,
+    "end": 9.557
+   },
+   {
+    "text": "Spark reads it with 1 task. One core works, and 7 sit idle.",
+    "start": 9.877,
+    "end": 14.187
+   }
+  ]
+ },
+ "s1_2": {
+  "scene": "S01_ColdOpen",
+  "file": "audio/segments/s1_2.wav",
+  "duration": 7.617,
+  "sentences": [
+   {
+    "text": "Nothing is wrong with the data. It's how the rows are piled up.",
+    "start": 0.0,
+    "end": 3.605
+   },
+   {
+    "text": "Spark works pile by pile, and one file made one pile.",
+    "start": 3.925,
+    "end": 7.467
+   }
+  ]
+ },
+ "s2_1": {
+  "scene": "S02_Title",
+  "file": "audio/segments/s2_1.wav",
+  "duration": 3.606,
+  "sentences": [
+   {
+    "text": "Welcome to Spark, Visually.",
+    "start": 0.0,
+    "end": 1.664
+   },
+   {
+    "text": "Today: piles of records.",
+    "start": 1.984,
+    "end": 3.456
+   }
+  ]
+ },
+ "s3_1": {
+  "scene": "S03_Piles",
+  "file": "audio/segments/s3_1.wav",
+  "duration": 8.235,
+  "sentences": [
+   {
+    "text": "Spark calls a pile of rows a partition. Each partition is worked on by one task, on one core, from start to finish.",
+    "start": 0.0,
+    "end": 8.085
+   }
+  ]
+ },
+ "s3_2": {
+  "scene": "S03_Piles",
+  "file": "audio/segments/s3_2.wav",
+  "duration": 12.481,
+  "sentences": [
+   {
+    "text": "Our 4 files make 4 piles. These two lines number each row's pile, and count them: 28, 25, 25 and 25.",
+    "start": 0.0,
+    "end": 9.259
+   },
+   {
+    "text": "Four piles: four cores work, and four sit idle.",
+    "start": 9.579,
+    "end": 12.331
+   }
+  ]
+ },
+ "s3_3": {
+  "scene": "S03_Piles",
+  "file": "audio/segments/s3_3.wav",
+  "duration": 5.185,
+  "sentences": [
+   {
+    "text": "Deal the rows into eight piles, and every core gets one. All eight work at once.",
+    "start": 0.0,
+    "end": 5.035
+   }
+  ]
+ },
+ "s4_1": {
+  "scene": "S04_Rounds",
+  "file": "audio/segments/s4_1.wav",
+  "duration": 9.729,
+  "sentences": [
+   {
+    "text": "So why not 32 piles? The eight cores take the first eight. Whenever a core finishes, it takes the next pile.",
+    "start": 0.0,
+    "end": 7.104
+   },
+   {
+    "text": "Thirty-two piles run in four rounds.",
+    "start": 7.424,
+    "end": 9.579
+   }
+  ]
+ },
+ "s4_2": {
+  "scene": "S04_Rounds",
+  "file": "audio/segments/s4_2.wav",
+  "duration": 10.177,
+  "sentences": [
+   {
+    "text": "This is a timeline: a lane for each core, and a bar for each task.",
+    "start": 0.0,
+    "end": 4.053
+   },
+   {
+    "text": "Every bar carries the same grey cap: the fixed cost of starting a task and wrapping it up.",
+    "start": 4.373,
+    "end": 10.027
+   }
+  ]
+ },
+ "s4_3": {
+  "scene": "S04_Rounds",
+  "file": "audio/segments/s4_3.wav",
+  "duration": 16.065,
+  "sentences": [
+   {
+    "text": "Our piles hold about 3 patients each, so the cap is nearly the whole bar: more than 99 percent of each task is overhead.",
+    "start": 0.0,
+    "end": 8.32
+   },
+   {
+    "text": "For a simple count, a pile needs at least tens of thousands of rows before its real work matches that fixed cost.",
+    "start": 8.64,
+    "end": 15.915
+   }
+  ]
+ },
+ "s5_1": {
+  "scene": "S05_Where",
+  "file": "audio/segments/s5_1.wav",
+  "duration": 27.67,
+  "sentences": [
+   {
+    "text": "So where do piles come from? When Spark reads files, it cuts big files into pieces, and packs small files together.",
+    "start": 0.0,
+    "end": 7.488
+   },
+   {
+    "text": "One big file of 61 megabytes, written in 8-megabyte row groups, became 8 piles, one for each core. And 32 small files became 8 piles too.",
+    "start": 7.808,
+    "end": 18.795
+   },
+   {
+    "text": "A piece is never bigger than 128 megabytes, and smaller when that gives every core a piece, but never under 4 megabytes.",
+    "start": 19.115,
+    "end": 27.52
+   }
+  ]
+ },
+ "s5_2": {
+  "scene": "S05_Where",
+  "file": "audio/segments/s5_2.wav",
+  "duration": 12.289,
+  "sentences": [
+   {
+    "text": "Data you build in code starts as one pile per core.",
+    "start": 0.0,
+    "end": 3.221
+   },
+   {
+    "text": "And after a shuffle, a setting decides: 200 piles by default, unless Spark merges the small ones. That's episode 5.",
+    "start": 3.541,
+    "end": 12.139
+   }
+  ]
+ },
+ "s6_1": {
+  "scene": "S06_Merge",
+  "file": "audio/segments/s6_1.wav",
+  "duration": 12.118,
+  "sentences": [
+   {
+    "text": "To change the number of piles, there are two tools.",
+    "start": 0.0,
+    "end": 2.645
+   },
+   {
+    "text": "The first, coalesce, merges piles where they stand. Ours become two piles, of 53 and 50, and not one row is re-dealt.",
+    "start": 2.965,
+    "end": 11.968
+   }
+  ]
+ },
+ "s6_2": {
+  "scene": "S06_Merge",
+  "file": "audio/segments/s6_2.wav",
+  "duration": 11.841,
+  "sentences": [
+   {
+    "text": "The second, repartition, re-deals every row. All 103 go through a shuffle into eight new piles.",
+    "start": 0.0,
+    "end": 7.253
+   },
+   {
+    "text": "A shuffle has a real cost. We'll open one up in episode 5.",
+    "start": 7.573,
+    "end": 11.691
+   }
+  ]
+ },
+ "s7_1": {
+  "scene": "S07_Uneven",
+  "file": "audio/segments/s7_1.wav",
+  "duration": 16.107,
+  "sentences": [
+   {
+    "text": "Piles don't have to be even. Write our cast as one big file and three small ones: piles of 70, 11, 11 and 11.",
+    "start": 0.0,
+    "end": 8.917
+   },
+   {
+    "text": "The big pile has over 6 times the rows. At scale, its core works on, while the others finish and wait.",
+    "start": 9.237,
+    "end": 15.957
+   }
+  ]
+ },
+ "s7_2": {
+  "scene": "S07_Uneven",
+  "file": "audio/segments/s7_2.wav",
+  "duration": 7.51,
+  "sentences": [
+   {
+    "text": "A stage ends when its last task ends. One big pile holds up the whole job. Remember that. It comes back.",
+    "start": 0.0,
+    "end": 7.36
+   }
+  ]
+ },
+ "s8_1": {
+  "scene": "S08_Rule",
+  "file": "audio/segments/s8_1.wav",
+  "duration": 13.803,
+  "sentences": [
+   {
+    "text": "So how many piles? A few per core, each one big enough that its work dwarfs the fixed cost.",
+    "start": 0.0,
+    "end": 5.76
+   },
+   {
+    "text": "Too few, and cores sit idle. Too many tiny ones, and you pay for overhead. Uneven, and everyone waits for the biggest.",
+    "start": 6.08,
+    "end": 13.653
+   }
+  ]
+ },
+ "s9_1": {
+  "scene": "S09_Recap",
+  "file": "audio/segments/s9_1.wav",
+  "duration": 13.483,
+  "sentences": [
+   {
+    "text": "Let's gather it up.",
+    "start": 0.0,
+    "end": 1.109
+   },
+   {
+    "text": "A partition is a pile of rows, and one task works on one pile, on one core.",
+    "start": 1.429,
+    "end": 6.421
+   },
+   {
+    "text": "Files, code and shuffles decide the piles. Coalesce merges them, and repartition re-deals them.",
+    "start": 6.741,
+    "end": 13.333
+   }
+  ]
+ },
+ "s9_2": {
+  "scene": "S09_Recap",
+  "file": "audio/segments/s9_2.wav",
+  "duration": 13.846,
+  "sentences": [
+   {
+    "text": "One loose end: the coalesce and repartition lines returned instantly. Nothing ran until something asked for a result.",
+    "start": 0.0,
+    "end": 8.128
+   },
+   {
+    "text": "So when does Spark actually do the work? Next time: nothing happens until you ask.",
+    "start": 8.448,
+    "end": 13.696
+   }
+  ]
+ },
+ "s9_3": {
+  "scene": "S09_Recap",
+  "file": "audio/segments/s9_3.wav",
+  "duration": 4.289,
+  "sentences": [
+   {
+    "text": "This has been Spark, Visually. Thanks for watching the cluster with us.",
+    "start": 0.0,
+    "end": 4.139
+   }
+  ]
+ }
+}

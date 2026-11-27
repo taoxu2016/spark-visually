@@ -1,0 +1,298 @@
+{
+ "s1_1": {
+  "scene": "S01_ColdOpen",
+  "file": "audio/segments/s1_1.wav",
+  "duration": 11.073,
+  "sentences": [
+   {
+    "text": "You've seen it happen: a few lines of PySpark come back instantly, and then one line takes minutes.",
+    "start": 0.0,
+    "end": 6.165
+   },
+   {
+    "text": "Here are four lines, run on our cast scaled up to about a million rows.",
+    "start": 6.485,
+    "end": 10.923
+   }
+  ]
+ },
+ "s1_2": {
+  "scene": "S01_ColdOpen",
+  "file": "audio/segments/s1_2.wav",
+  "duration": 7.617,
+  "sentences": [
+   {
+    "text": "The first three read nothing. Not one row.",
+    "start": 0.0,
+    "end": 2.453
+   },
+   {
+    "text": "The fourth reads every single row. So why do the first three read nothing?",
+    "start": 2.773,
+    "end": 7.467
+   }
+  ]
+ },
+ "s2_1": {
+  "scene": "S02_Title",
+  "file": "audio/segments/s2_1.wav",
+  "duration": 4.161,
+  "sentences": [
+   {
+    "text": "Welcome to Spark, Visually.",
+    "start": 0.0,
+    "end": 1.664
+   },
+   {
+    "text": "Today: nothing happens until you ask.",
+    "start": 1.984,
+    "end": 4.011
+   }
+  ]
+ },
+ "s3_1": {
+  "scene": "S03_Recipe",
+  "file": "audio/segments/s3_1.wav",
+  "duration": 11.905,
+  "sentences": [
+   {
+    "text": "Back to our 103 patients. Line one filters them down to the higher-risk patients. Or rather, it writes that down.",
+    "start": 0.0,
+    "end": 8.107
+   },
+   {
+    "text": "A step is added to a plan: filter. Not one row moves.",
+    "start": 8.427,
+    "end": 11.755
+   }
+  ]
+ },
+ "s3_2": {
+  "scene": "S03_Recipe",
+  "file": "audio/segments/s3_2.wav",
+  "duration": 8.79,
+  "sentences": [
+   {
+    "text": "Line two adds a column, and line three keeps just two columns. Each one adds a step.",
+    "start": 0.0,
+    "end": 5.589
+   },
+   {
+    "text": "Three lines, and not a single row has been read.",
+    "start": 5.909,
+    "end": 8.64
+   }
+  ]
+ },
+ "s3_3": {
+  "scene": "S03_Recipe",
+  "file": "audio/segments/s3_3.wav",
+  "duration": 6.827,
+  "sentences": [
+   {
+    "text": "A DataFrame isn't a table of rows. It's a recipe: where the rows come from, and the steps to follow.",
+    "start": 0.0,
+    "end": 6.677
+   }
+  ]
+ },
+ "s4_1": {
+  "scene": "S04_Count",
+  "file": "audio/segments/s4_1.wav",
+  "duration": 9.835,
+  "sentences": [
+   {
+    "text": "Line four asks a question: how many rows are left? That's an action, and an action runs the recipe.",
+    "start": 0.0,
+    "end": 6.464
+   },
+   {
+    "text": "The driver sends 4 tasks down, one per file.",
+    "start": 6.784,
+    "end": 9.685
+   }
+  ]
+ },
+ "s4_2": {
+  "scene": "S04_Count",
+  "file": "audio/segments/s4_2.wav",
+  "duration": 13.334,
+  "sentences": [
+   {
+    "text": "Each task reads its file and filters the rows as they arrive, in a single pass.",
+    "start": 0.0,
+    "end": 5.184
+   },
+   {
+    "text": "And the new column? A count doesn't need it, so Spark never computes it. It even reads just the one column the filter needs.",
+    "start": 5.504,
+    "end": 13.184
+   }
+  ]
+ },
+ "s4_3": {
+  "scene": "S04_Count",
+  "file": "audio/segments/s4_3.wav",
+  "duration": 5.995,
+  "sentences": [
+   {
+    "text": "46 higher-risk patients make it through, and one number goes up to the driver: 46.",
+    "start": 0.0,
+    "end": 5.845
+   }
+  ]
+ },
+ "s5_1": {
+  "scene": "S05_Again",
+  "file": "audio/segments/s5_1.wav",
+  "duration": 12.374,
+  "sentences": [
+   {
+    "text": "Line five asks to see the rows. Another action, so the recipe runs again, from the files.",
+    "start": 0.0,
+    "end": 6.144
+   },
+   {
+    "text": "This time it needs every step, and it still makes one pass: filter, add the column, keep two.",
+    "start": 6.464,
+    "end": 12.224
+   }
+  ]
+ },
+ "s5_2": {
+  "scene": "S05_Again",
+  "file": "audio/segments/s5_2.wav",
+  "duration": 12.395,
+  "sentences": [
+   {
+    "text": "Spark didn't keep the count's work. Normally, every action starts again from storage, unless you ask Spark to keep a result.",
+    "start": 0.0,
+    "end": 7.893
+   },
+   {
+    "text": "And even that request waits for an action. That's episode 10.",
+    "start": 8.213,
+    "end": 12.245
+   }
+  ]
+ },
+ "s6_1": {
+  "scene": "S06_WhyWait",
+  "file": "audio/segments/s6_1.wav",
+  "duration": 10.07,
+  "sentences": [
+   {
+    "text": "So why be lazy? Because when the action arrives, Spark sees the whole recipe at once, and can plan it.",
+    "start": 0.0,
+    "end": 6.123
+   },
+   {
+    "text": "Here's our cast again, written with its files sorted by risk.",
+    "start": 6.443,
+    "end": 9.92
+   }
+  ]
+ },
+ "s6_2": {
+  "scene": "S06_WhyWait",
+  "file": "audio/segments/s6_2.wav",
+  "duration": 12.139,
+  "sentences": [
+   {
+    "text": "Spark pushes the filter into the read itself. Files that hold no higher-risk patients are skipped, and it reads 53 rows instead of 103.",
+    "start": 0.0,
+    "end": 10.133
+   },
+   {
+    "text": "Episode 6 shows how.",
+    "start": 10.453,
+    "end": 11.989
+   }
+  ]
+ },
+ "s7_1": {
+  "scene": "S07_Kinds",
+  "file": "audio/segments/s7_1.wav",
+  "duration": 15.169,
+  "sentences": [
+   {
+    "text": "So, two kinds of line. A transformation hands back a new DataFrame: a longer recipe, and no work.",
+    "start": 0.0,
+    "end": 6.912
+   },
+   {
+    "text": "An action hands back a result: a number, rows on screen or in your hands, or files written. Actions do the work.",
+    "start": 7.232,
+    "end": 15.019
+   }
+  ]
+ },
+ "s7_2": {
+  "scene": "S07_Kinds",
+  "file": "audio/segments/s7_2.wav",
+  "duration": 11.03,
+  "sentences": [
+   {
+    "text": "A common exception: read a CSV file and ask Spark to guess its column types, and it runs 2 jobs, to look at the data.",
+    "start": 0.0,
+    "end": 8.064
+   },
+   {
+    "text": "Give it the schema, and the read is lazy again.",
+    "start": 8.384,
+    "end": 10.88
+   }
+  ]
+ },
+ "s8_1": {
+  "scene": "S08_Recap",
+  "file": "audio/segments/s8_1.wav",
+  "duration": 10.262,
+  "sentences": [
+   {
+    "text": "Let's gather it up.",
+    "start": 0.0,
+    "end": 1.109
+   },
+   {
+    "text": "Transformations write the recipe. Actions run it, in one pass over each pile.",
+    "start": 1.429,
+    "end": 6.741
+   },
+   {
+    "text": "And normally, every action starts again from storage.",
+    "start": 7.061,
+    "end": 10.112
+   }
+  ]
+ },
+ "s8_2": {
+  "scene": "S08_Recap",
+  "file": "audio/segments/s8_2.wav",
+  "duration": 9.963,
+  "sentences": [
+   {
+    "text": "One loose end: our count was one action, yet Spark ran it as 2 jobs and 2 stages.",
+    "start": 0.0,
+    "end": 5.973
+   },
+   {
+    "text": "How does Spark cut up the work? Next time: cut at the walls.",
+    "start": 6.293,
+    "end": 9.813
+   }
+  ]
+ },
+ "s8_3": {
+  "scene": "S08_Recap",
+  "file": "audio/segments/s8_3.wav",
+  "duration": 4.289,
+  "sentences": [
+   {
+    "text": "This has been Spark, Visually. Thanks for watching the cluster with us.",
+    "start": 0.0,
+    "end": 4.139
+   }
+  ]
+ }
+}

@@ -1,0 +1,371 @@
+{
+ "s1_1": {
+  "scene": "S01_ColdOpen",
+  "file": "audio/segments/s1_1.wav",
+  "duration": 9.643,
+  "sentences": [
+   {
+    "text": "Last time, a single count ran as 2 jobs and 2 stages.",
+    "start": 0.0,
+    "end": 4.032
+   },
+   {
+    "text": "Here's a new question for our cast: how many higher-risk patients does each clinic have?",
+    "start": 4.352,
+    "end": 9.493
+   }
+  ]
+ },
+ "s1_2": {
+  "scene": "S01_ColdOpen",
+  "file": "audio/segments/s1_2.wav",
+  "duration": 7.553,
+  "sentences": [
+   {
+    "text": "One action answers it. Spark ran it as 2 jobs, 2 stages and 5 tasks.",
+    "start": 0.0,
+    "end": 5.525
+   },
+   {
+    "text": "Where do those numbers come from?",
+    "start": 5.845,
+    "end": 7.403
+   }
+  ]
+ },
+ "s2_1": {
+  "scene": "S02_Title",
+  "file": "audio/segments/s2_1.wav",
+  "duration": 3.457,
+  "sentences": [
+   {
+    "text": "Welcome to Spark, Visually.",
+    "start": 0.0,
+    "end": 1.664
+   },
+   {
+    "text": "Today: cut at the walls.",
+    "start": 1.984,
+    "end": 3.307
+   }
+  ]
+ },
+ "s3_1": {
+  "scene": "S03_Plan",
+  "file": "audio/segments/s3_1.wav",
+  "duration": 10.475,
+  "sentences": [
+   {
+    "text": "Line one is last episode's filter. Line two asks for a count per clinic, and the driver adds it to the plan.",
+    "start": 0.0,
+    "end": 7.424
+   },
+   {
+    "text": "Nothing has run yet. But this step is different.",
+    "start": 7.744,
+    "end": 10.325
+   }
+  ]
+ },
+ "s3_2": {
+  "scene": "S03_Plan",
+  "file": "audio/segments/s3_2.wav",
+  "duration": 16.79,
+  "sentences": [
+   {
+    "text": "A clinic's patients sit in different piles. So when it runs, Spark counts in two steps.",
+    "start": 0.0,
+    "end": 5.376
+   },
+   {
+    "text": "First, each pile counts its own patients, clinic by clinic. Then those partial counts must meet, so each clinic's numbers move to one place. That step is an exchange.",
+    "start": 5.696,
+    "end": 16.64
+   }
+  ]
+ },
+ "s4_1": {
+  "scene": "S04_Cut",
+  "file": "audio/segments/s4_1.wav",
+  "duration": 9.771,
+  "sentences": [
+   {
+    "text": "Spark cuts the plan at every exchange, and each piece is a stage.",
+    "start": 0.0,
+    "end": 4.032
+   },
+   {
+    "text": "Stage one reads, filters and counts each pile. Stage two finishes the counts.",
+    "start": 4.352,
+    "end": 9.621
+   }
+  ]
+ },
+ "s4_2": {
+  "scene": "S04_Cut",
+  "file": "audio/segments/s4_2.wav",
+  "duration": 10.283,
+  "sentences": [
+   {
+    "text": "Between the two stands a wall: nothing beyond it starts until everything before it has finished.",
+    "start": 0.0,
+    "end": 5.675
+   },
+   {
+    "text": "Stage two can't start early, because it needs a piece from every pile.",
+    "start": 5.995,
+    "end": 10.133
+   }
+  ]
+ },
+ "s4_3": {
+  "scene": "S04_Cut",
+  "file": "audio/segments/s4_3.wav",
+  "duration": 7.126,
+  "sentences": [
+   {
+    "text": "Inside a stage, the work is split one task per pile. Four piles, so stage one runs 4 tasks.",
+    "start": 0.0,
+    "end": 6.976
+   }
+  ]
+ },
+ "s5_1": {
+  "scene": "S05_Run",
+  "file": "audio/segments/s5_1.wav",
+  "duration": 11.073,
+  "sentences": [
+   {
+    "text": "Line three is the action. Four tasks go down and run side by side.",
+    "start": 0.0,
+    "end": 4.523
+   },
+   {
+    "text": "Each one finishes when its own pile is done, and stage two can't begin until the last one does.",
+    "start": 4.843,
+    "end": 10.923
+   }
+  ]
+ },
+ "s5_2": {
+  "scene": "S05_Run",
+  "file": "audio/segments/s5_2.wav",
+  "duration": 14.699,
+  "sentences": [
+   {
+    "text": "When the last one finishes, the wall opens. The partial counts cross, and stage two adds them up.",
+    "start": 0.0,
+    "end": 6.037
+   },
+   {
+    "text": "Alder has 6 higher-risk patients, Birch 24, Cedar 10 and Dune 6. Elm has none, so it gets no row at all.",
+    "start": 6.357,
+    "end": 14.549
+   }
+  ]
+ },
+ "s5_3": {
+  "scene": "S05_Run",
+  "file": "audio/segments/s5_3.wav",
+  "duration": 13.526,
+  "sentences": [
+   {
+    "text": "And stage two's tasks? The exchange deals into 200 piles by default. These are tiny, so Spark merges them into one: one pile, one task.",
+    "start": 0.0,
+    "end": 10.752
+   },
+   {
+    "text": "Four tasks, then one: those are our 5.",
+    "start": 11.072,
+    "end": 13.376
+   }
+  ]
+ },
+ "s6_1": {
+  "scene": "S06_Explain",
+  "file": "audio/segments/s6_1.wav",
+  "duration": 12.971,
+  "sentences": [
+   {
+    "text": "Line four prints the plan Spark ran. Read it from the bottom up: the scan, the filter, the partial count.",
+    "start": 0.0,
+    "end": 6.741
+   },
+   {
+    "text": "Then a line that starts with Exchange. That's the wall, and the 200 piles it deals into.",
+    "start": 7.061,
+    "end": 12.821
+   }
+  ]
+ },
+ "s6_2": {
+  "scene": "S06_Explain",
+  "file": "audio/segments/s6_2.wav",
+  "duration": 17.899,
+  "sentences": [
+   {
+    "text": "Beside the steps sit star-one and star-two. They aren't stage numbers: they number the chains of steps Spark compiles into one function.",
+    "start": 0.0,
+    "end": 8.811
+   },
+   {
+    "text": "Adaptive execution counts its query stages, 0 and 1, its own way too.",
+    "start": 9.131,
+    "end": 14.379
+   },
+   {
+    "text": "Spark's UI numbered our two stages 2 and 4.",
+    "start": 14.699,
+    "end": 17.749
+   }
+  ]
+ },
+ "s6_3": {
+  "scene": "S06_Explain",
+  "file": "audio/segments/s6_3.wav",
+  "duration": 12.587,
+  "sentences": [
+   {
+    "text": "One catch: on Spark Connect, which some Databricks compute uses, explain() shows the starting plan, even after the run.",
+    "start": 0.0,
+    "end": 7.808
+   },
+   {
+    "text": "To see the plan that ran, use the Spark UI, or the query profile.",
+    "start": 8.128,
+    "end": 12.437
+   }
+  ]
+ },
+ "s7_1": {
+  "scene": "S07_UI",
+  "file": "audio/segments/s7_1.wav",
+  "duration": 15.19,
+  "sentences": [
+   {
+    "text": "Now, why two jobs? With adaptive execution on, as it is by default, Spark runs stage one as a job of its own.",
+    "start": 0.0,
+    "end": 8.107
+   },
+   {
+    "text": "It looks at how much stage one actually wrote, and only then plans the rest. That's episode 12.",
+    "start": 8.427,
+    "end": 15.04
+   }
+  ]
+ },
+ "s7_2": {
+  "scene": "S07_UI",
+  "file": "audio/segments/s7_2.wav",
+  "duration": 11.201,
+  "sentences": [
+   {
+    "text": "The second job lists that first stage again, marked skipped. Its work was done, and its output was still there to reuse.",
+    "start": 0.0,
+    "end": 7.637
+   },
+   {
+    "text": "The skipped copy even took a number of its own: 3.",
+    "start": 7.957,
+    "end": 11.051
+   }
+  ]
+ },
+ "s7_3": {
+  "scene": "S07_UI",
+  "file": "audio/segments/s7_3.wav",
+  "duration": 12.737,
+  "sentences": [
+   {
+    "text": "Switch adaptive execution off and count again, and you get 1 job with the same two stages. But now stage two runs 200 tasks, one per pile, and most of those piles are empty.",
+    "start": 0.0,
+    "end": 12.587
+   }
+  ]
+ },
+ "s8_1": {
+  "scene": "S08_Join",
+  "file": "audio/segments/s8_1.wav",
+  "duration": 17.857,
+  "sentences": [
+   {
+    "text": "One last line: join the cast to a small table of clinics.",
+    "start": 0.0,
+    "end": 3.563
+   },
+   {
+    "text": "Spark would normally take a shortcut with a table this small, and the hint asks it not to. That's episode 8.",
+    "start": 3.883,
+    "end": 10.923
+   },
+   {
+    "text": "So both sides are dealt out by clinic: each side gets its own stage, and a third stage joins them.",
+    "start": 11.243,
+    "end": 17.707
+   }
+  ]
+ },
+ "s8_2": {
+  "scene": "S08_Join",
+  "file": "audio/segments/s8_2.wav",
+  "duration": 10.049,
+  "sentences": [
+   {
+    "text": "Neither input needs the other, so there's no wall between them, and they run at the same time.",
+    "start": 0.0,
+    "end": 5.376
+   },
+   {
+    "text": "One line of code, three stages: a stage isn't a line of code.",
+    "start": 5.696,
+    "end": 9.899
+   }
+  ]
+ },
+ "s9_1": {
+  "scene": "S09_Recap",
+  "file": "audio/segments/s9_1.wav",
+  "duration": 18.945,
+  "sentences": [
+   {
+    "text": "Let's gather it up.",
+    "start": 0.0,
+    "end": 1.109
+   },
+   {
+    "text": "An action starts one job or several, and adaptive execution is one reason for several. Spark cuts its plan at every exchange, and each piece is a stage.",
+    "start": 1.429,
+    "end": 12.117
+   },
+   {
+    "text": "A stage runs one task per pile, and a wall stands wherever one stage needs another's output.",
+    "start": 12.437,
+    "end": 18.795
+   }
+  ]
+ },
+ "s9_2": {
+  "scene": "S09_Recap",
+  "file": "audio/segments/s9_2.wav",
+  "duration": 4.886,
+  "sentences": [
+   {
+    "text": "But what exactly crosses the wall? Next time: everyone sends to everyone.",
+    "start": 0.0,
+    "end": 4.736
+   }
+  ]
+ },
+ "s9_3": {
+  "scene": "S09_Recap",
+  "file": "audio/segments/s9_3.wav",
+  "duration": 4.289,
+  "sentences": [
+   {
+    "text": "This has been Spark, Visually. Thanks for watching the cluster with us.",
+    "start": 0.0,
+    "end": 4.139
+   }
+  ]
+ }
+}

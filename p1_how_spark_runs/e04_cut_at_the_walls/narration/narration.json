@@ -1,0 +1,348 @@
+{
+ "series": "Spark, Visually",
+ "arc": "Part I · How Spark Runs a Job",
+ "episode": 4,
+ "title": "Cut at the Walls",
+ "subtitle": "jobs, stages and tasks",
+ "name": "SparkVisually_P1_E04_CutAtTheWalls",
+ "status": "Script approved by the owner on 26 Nov 2026 (draft 2, revised after the second-model review). Voiced with am_fenrir.",
+ "voice": {
+  "engine": "kokoro-onnx v1.0",
+  "name": "am_fenrir",
+  "speed": 0.92,
+  "lang": "en-us",
+  "pause_between_sentences": 0.32,
+  "tail_pad": 0.15
+ },
+ "pronunciations": {},
+ "scenes": [
+  {
+   "id": "S01_ColdOpen",
+   "chapter": null,
+   "segments": [
+    {
+     "id": "s1_1",
+     "visual": "The code panel holds Episode 3's filter and a new line, a count per clinic. Beside the driver, last episode's tally: 1 action, 2 jobs, 2 stages.",
+     "sentences": [
+      {
+       "text": "Last time, a single count ran as 2 jobs and 2 stages.",
+       "say": "Last time, a single count ran as two jobs and two stages."
+      },
+      {
+       "text": "Here's a new question for our cast: how many higher-risk patients does each clinic have?"
+      }
+     ]
+    },
+    {
+     "id": "s1_2",
+     "visual": "Line 3 glows: collect. A schematic of Spark's UI fills in from this run: 2 jobs, 2 stages and 5 tasks that ran, with one more stage beside them, greyed: skipped.",
+     "sentences": [
+      {
+       "text": "One action answers it. Spark ran it as 2 jobs, 2 stages and 5 tasks.",
+       "say": "One action answers it. Spark ran it as two jobs, two stages and five tasks."
+      },
+      {
+       "text": "Where do those numbers come from?"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "S02_Title",
+   "chapter": null,
+   "segments": [
+    {
+     "id": "s2_1",
+     "visual": "Series wordmark, Spark, Visually; Part I, How Spark runs a job; the episode title.",
+     "sentences": [
+      {
+       "text": "Welcome to Spark, Visually."
+      },
+      {
+       "text": "Today: cut at the walls."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "S03_Plan",
+   "chapter": "The plan",
+   "segments": [
+    {
+     "id": "s3_1",
+     "visual": "Lines 1 and 2 type. The plan on the driver desk reads: read, filter; then one more box: count per clinic. The benches stay empty.",
+     "sentences": [
+      {
+       "text": "Line one is last episode's filter. Line two asks for a count per clinic, and the driver adds it to the plan."
+      },
+      {
+       "text": "Nothing has run yet. But this step is different."
+      }
+     ]
+    },
+    {
+     "id": "s3_2",
+     "visual": "The cast's four piles; Alder's higher-risk patients glow in the three piles that hold them. The count box splits into the plan Spark will run: partial count, exchange, count; the exchange lights.",
+     "sentences": [
+      {
+       "text": "A clinic's patients sit in different piles. So when it runs, Spark counts in two steps."
+      },
+      {
+       "text": "First, each pile counts its own patients, clinic by clinic. Then those partial counts must meet, so each clinic's numbers move to one place. That step is an exchange."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "S04_Cut",
+   "chapter": "Cut at the walls",
+   "segments": [
+    {
+     "id": "s4_1",
+     "visual": "A cut through the plan at the exchange; two tinted bands: stage 1 (read, filter, partial count) and stage 2 (count).",
+     "sentences": [
+      {
+       "text": "Spark cuts the plan at every exchange, and each piece is a stage."
+      },
+      {
+       "text": "Stage one reads, filters and counts each pile. Stage two finishes the counts."
+      }
+     ]
+    },
+    {
+     "id": "s4_2",
+     "visual": "A wall drops across the executors' lanes, between stage 1 and stage 2.",
+     "sentences": [
+      {
+       "text": "Between the two stands a wall: nothing beyond it starts until everything before it has finished."
+      },
+      {
+       "text": "Stage two can't start early, because it needs a piece from every pile."
+      }
+     ]
+    },
+    {
+     "id": "s4_3",
+     "visual": "Stage 1's band gains four task tiles, one per pile.",
+     "sentences": [
+      {
+       "text": "Inside a stage, the work is split one task per pile. Four piles, so stage one runs 4 tasks.",
+       "say": "Inside a stage, the work is split one task per pile. Four piles, so stage one runs four tasks."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "S05_Run",
+   "chapter": "Running the job",
+   "segments": [
+    {
+     "id": "s5_1",
+     "visual": "Line 3 glows: per_clinic.collect(). Four tasks drop. Each tray's chips stream through the filter and settle as small partial counts, clinic by clinic. As each task finishes, in this run's order, its core goes dark; the wall holds stage two.",
+     "sentences": [
+      {
+       "text": "Line three is the action. Four tasks go down and run side by side."
+      },
+      {
+       "text": "Each one finishes when its own pile is done, and stage two can't begin until the last one does."
+      }
+     ]
+    },
+    {
+     "id": "s5_2",
+     "visual": "The last tick; the wall opens. 14 partial counts cross to one task; the final counts appear: Alder 6, Birch 24, Cedar 10, Dune 6. Four rows rise to the driver.",
+     "sentences": [
+      {
+       "text": "When the last one finishes, the wall opens. The partial counts cross, and stage two adds them up."
+      },
+      {
+       "text": "Alder has 6 higher-risk patients, Birch 24, Cedar 10 and Dune 6. Elm has none, so it gets no row at all.",
+       "say": "Alder has six higher-risk patients, Birch twenty-four, Cedar ten and Dune six. Elm has none, so it gets no row at all."
+      }
+     ]
+    },
+    {
+     "id": "s5_3",
+     "visual": "Stage 2's 200 piles, almost all empty, merge into one; one task. The tally reads 4 tasks, then 1.",
+     "sentences": [
+      {
+       "text": "And stage two's tasks? The exchange deals into 200 piles by default. These are tiny, so Spark merges them into one: one pile, one task.",
+       "say": "And stage two's tasks? The exchange deals into two hundred piles by default. These are tiny, so Spark merges them into one: one pile, one task."
+      },
+      {
+       "text": "Four tasks, then one: those are our 5.",
+       "say": "Four tasks, then one: those are our five."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "S06_Explain",
+   "chapter": "Reading the plan",
+   "segments": [
+    {
+     "id": "s6_1",
+     "visual": "Line 4 types: per_clinic.explain(). The printed plan appears, cropped to the final plan, the one that ran; read from the bottom up: scan, filter, partial count; then the Exchange line lights, with its 200.",
+     "sentences": [
+      {
+       "text": "Line four prints the plan Spark ran. Read it from the bottom up: the scan, the filter, the partial count."
+      },
+      {
+       "text": "Then a line that starts with Exchange. That's the wall, and the 200 piles it deals into.",
+       "say": "Then a line that starts with Exchange. That's the wall, and the two hundred piles it deals into."
+      }
+     ]
+    },
+    {
+     "id": "s6_2",
+     "visual": "The *(1) and *(2) markers light, then the query stages 0 and 1; beside them, the UI's stage numbers, captioned as this run's: 2 and 4.",
+     "sentences": [
+      {
+       "text": "Beside the steps sit star-one and star-two. They aren't stage numbers: they number the chains of steps Spark compiles into one function."
+      },
+      {
+       "text": "Adaptive execution counts its query stages, 0 and 1, its own way too.",
+       "say": "Adaptive execution counts its query stages, zero and one, its own way too."
+      },
+      {
+       "text": "Spark's UI numbered our two stages 2 and 4.",
+       "say": "Spark's UI numbered our two stages two and four."
+      }
+     ]
+    },
+    {
+     "id": "s6_3",
+     "visual": "A caption under the plan: on Spark Connect, explain() shows the starting plan, even after the run.",
+     "sentences": [
+      {
+       "text": "One catch: on Spark Connect, which some Databricks compute uses, explain() shows the starting plan, even after the run."
+      },
+      {
+       "text": "To see the plan that ran, use the Spark UI, or the query profile."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "S07_UI",
+   "chapter": "Reading the UI",
+   "segments": [
+    {
+     "id": "s7_1",
+     "visual": "A schematic Jobs page from this run: job 2, one stage, 4 tasks; job 3, one stage plus one skipped, 1 task.",
+     "sentences": [
+      {
+       "text": "Now, why two jobs? With adaptive execution on, as it is by default, Spark runs stage one as a job of its own."
+      },
+      {
+       "text": "It looks at how much stage one actually wrote, and only then plans the rest. That's episode 12.",
+       "say": "It looks at how much stage one actually wrote, and only then plans the rest. That's episode twelve."
+      }
+     ]
+    },
+    {
+     "id": "s7_2",
+     "visual": "The second job's skipped stage greys out, with its own number: 3.",
+     "sentences": [
+      {
+       "text": "The second job lists that first stage again, marked skipped. Its work was done, and its output was still there to reuse."
+      },
+      {
+       "text": "The skipped copy even took a number of its own: 3.",
+       "say": "The skipped copy even took a number of its own: three."
+      }
+     ]
+    },
+    {
+     "id": "s7_3",
+     "visual": "A settings card runs its two lines: adaptive execution off, and the same count again. The UI schematic: 1 job, the same two stages, 4 tasks, then 200.",
+     "sentences": [
+      {
+       "text": "Switch adaptive execution off and count again, and you get 1 job with the same two stages. But now stage two runs 200 tasks, one per pile, and most of those piles are empty.",
+       "say": "Switch adaptive execution off and count again, and you get one job with the same two stages. But now stage two runs two hundred tasks, one per pile, and most of those piles are empty."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "S08_Join",
+   "chapter": "Not always in line",
+   "segments": [
+    {
+     "id": "s8_1",
+     "visual": "Line 5 types: df.join(clinics.hint(\"merge\"), \"clinic\").collect(). The plan: two reads, each with its own exchange, meeting at a join; three stages.",
+     "sentences": [
+      {
+       "text": "One last line: join the cast to a small table of clinics."
+      },
+      {
+       "text": "Spark would normally take a shortcut with a table this small, and the hint asks it not to. That's episode 8.",
+       "say": "Spark would normally take a shortcut with a table this small, and the hint asks it not to. That's episode eight."
+      },
+      {
+       "text": "So both sides are dealt out by clinic: each side gets its own stage, and a third stage joins them."
+      }
+     ]
+    },
+    {
+     "id": "s8_2",
+     "visual": "A timeline from this run: the two input stages' bars overlap; a wall; then the join stage.",
+     "sentences": [
+      {
+       "text": "Neither input needs the other, so there's no wall between them, and they run at the same time."
+      },
+      {
+       "text": "One line of code, three stages: a stage isn't a line of code."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "S09_Recap",
+   "chapter": "Recap",
+   "segments": [
+    {
+     "id": "s9_1",
+     "visual": "Three recap cards: an action starts one job or several; the plan is cut into stages at every exchange; one task per pile, and a wall wherever one stage needs another's output.",
+     "sentences": [
+      {
+       "text": "Let's gather it up."
+      },
+      {
+       "text": "An action starts one job or several, and adaptive execution is one reason for several. Spark cuts its plan at every exchange, and each piece is a stage."
+      },
+      {
+       "text": "A stage runs one task per pile, and a wall stands wherever one stage needs another's output."
+      }
+     ]
+    },
+    {
+     "id": "s9_2",
+     "visual": "The wall alone across the lanes; the next episode's title: Everyone sends to everyone.",
+     "sentences": [
+      {
+       "text": "But what exactly crosses the wall? Next time: everyone sends to everyone."
+      }
+     ]
+    },
+    {
+     "id": "s9_3",
+     "visual": "Series end card with the next episode title.",
+     "sentences": [
+      {
+       "text": "This has been Spark, Visually. Thanks for watching the cluster with us."
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

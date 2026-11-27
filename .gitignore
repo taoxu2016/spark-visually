@@ -1,0 +1,8 @@
+# built or downloaded, never committed
+build/
+**/audio/segments/
+**/audio/cache/
+__pycache__/
+*.pyc
+*.mp4
+*.wav

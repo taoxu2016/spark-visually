@@ -1,0 +1,42 @@
+# Runs on every push and pull request. Nothing here renders; it checks that the episodes still say what Spark does.
+name: checks
+on: [push, pull_request, workflow_dispatch]
+
+jobs:
+  scripts:
+    name: scripts and review prompts match their builders
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - name: Rebuild every script and review prompt, and fail if anything changes
+        run: |
+          for ep in p1_how_spark_runs/e*/; do
+            python "$ep/narration/build_script.py"
+            python tools/review_prompt.py "$ep"
+          done
+          git diff --exit-code
+
+  numbers:
+    name: numbers ${{ matrix.episode }}
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        episode:
+          - e01_who_does_the_work
+          - e02_piles_of_records
+          - e03_nothing_happens_until_you_ask
+          - e04_cut_at_the_walls
+          - e05_everyone_sends_to_everyone
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: "21"}
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install -r requirements-numbers.txt
+      - name: Run the episode's numbers file (every check must pass)
+        working-directory: p1_how_spark_runs/${{ matrix.episode }}
+        run: python e*_numbers.py

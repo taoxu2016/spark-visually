@@ -1,0 +1,3 @@
+[submodule "external/model-in-motion"]
+	path = external/model-in-motion
+	url = https://github.com/taoxu2016/model-in-motion

@@ -1,0 +1,408 @@
+{
+ "series": "Spark, Visually",
+ "arc": "Part I · How Spark Runs a Job",
+ "episode": 5,
+ "title": "Everyone Sends to Everyone",
+ "subtitle": "the shuffle",
+ "name": "SparkVisually_P1_E05_EveryoneSendsToEveryone",
+ "status": "Script approved by the owner on 26 Nov 2026; revised after the second-model review (s4_2, s7_2 and s8_3, the code panel's actions and setting note, and the pictures in S06 to S08; see the review doc). Voiced with am_fenrir.",
+ "voice": {
+  "engine": "kokoro-onnx v1.0",
+  "name": "am_fenrir",
+  "audition": [
+   "am_michael",
+   "am_fenrir",
+   "am_echo",
+   "am_eric",
+   "am_liam",
+   "am_adam",
+   "am_onyx",
+   "bm_george",
+   "bm_fable",
+   "bm_lewis",
+   "bm_daniel",
+   "am_fenrir:0.5+am_michael:0.5",
+   "am_michael:0.6+am_onyx:0.4",
+   "bm_george:0.5+bm_fable:0.5",
+   "am_michael:0.7+af_heart:0.3"
+  ],
+  "speed": 0.92,
+  "lang": "en-us",
+  "pause_between_sentences": 0.32,
+  "tail_pad": 0.15
+ },
+ "pronunciations": {},
+ "scenes": [
+  {
+   "id": "S01_ColdOpen",
+   "chapter": null,
+   "segments": [
+    {
+     "id": "s1_1",
+     "visual": "The home shot. Four executor benches, each holding a tray of chips in the clinic hues; the trays read 28, 25, 25 and 25 rows. The code panel is empty.",
+     "sentences": [
+      {
+       "text": "Here's a simple question: how many patients does each clinic have?"
+      },
+      {
+       "text": "Our 103 patients are spread across four machines, in four piles.",
+       "say": "Our hundred and three patients are spread across four machines, in four piles."
+      }
+     ]
+    },
+    {
+     "id": "s1_2",
+     "visual": "Alder's orange chips pulse on every bench, with counts 9, 5, 8 and 8.",
+     "sentences": [
+      {
+       "text": "Take Alder. It has 9 patients on this machine, 5 on this one, and 8 on each of the last two.",
+       "say": "Take Alder. It has nine patients on this machine, five on this one, and eight on each of the last two."
+      },
+      {
+       "text": "No machine can count Alder by itself. Alder's rows have to meet."
+      }
+     ]
+    },
+    {
+     "id": "s1_3",
+     "visual": "Wrong method, sketched once: every chip streams up to the driver and its memory gauge rises. The shot rewinds.",
+     "sentences": [
+      {
+       "text": "We could send every row to the driver and count there. For 103 rows, fine. For a whole registry, the driver chokes.",
+       "say": "We could send every row to the driver and count there. For a hundred and three rows, fine. For a whole registry, the driver chokes."
+      },
+      {
+       "text": "So Spark does something smarter: it moves rows sideways, between the machines."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "S02_Title",
+   "chapter": null,
+   "segments": [
+    {
+     "id": "s2_1",
+     "visual": "Series wordmark, Spark, Visually; Part I, How Spark runs a job; the episode title.",
+     "sentences": [
+      {
+       "text": "Welcome to Spark, Visually."
+      },
+      {
+       "text": "Today: everyone sends to everyone."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "S03_Wall",
+   "chapter": "The wall",
+   "segments": [
+    {
+     "id": "s3_1",
+     "visual": "The plan tree on the driver desk: scan, partial count, Exchange, final count. A dashed wall drops across the executors' lanes at the Exchange.",
+     "sentences": [
+      {
+       "text": "Every Spark plan is cut wherever rows must change machines."
+      },
+      {
+       "text": "At each cut stands a wall: no work on the far side starts until all the work on the near side is done."
+      }
+     ]
+    },
+    {
+     "id": "s3_2",
+     "visual": "The camera pushes in on the wall.",
+     "sentences": [
+      {
+       "text": "Today, we walk through that wall, and watch what crosses it."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "S04_Bins",
+   "chapter": "Into bins",
+   "segments": [
+    {
+     "id": "s4_1",
+     "visual": "Code panel, line 1 glows: spark.conf.set(\"spark.sql.shuffle.partitions\", 5). Five reducer slots, 0 to 4, appear ghosted beyond the wall. Beside each bench, five empty bins numbered 0 to 4.",
+     "sentences": [
+      {
+       "text": "On the far side of the wall, we'll have five reduce tasks. Five clinics, five reducers: one each, you'd hope."
+      },
+      {
+       "text": "So every pile gets sorted into five bins, one for each reducer."
+      }
+     ]
+    },
+    {
+     "id": "s4_2",
+     "visual": "Line 2 glows: df.repartition(\"clinic\").collect(). One chip is lifted; its clinic name passes through a hash box; a number comes out; the chip drops into that bin. Over the box: pmod(hash(clinic), 5).",
+     "sentences": [
+      {
+       "text": "Which bin? Spark turns the clinic's name into a big number, called a hash, and keeps the positive remainder after dividing by five."
+      },
+      {
+       "text": "The same name gives the same bin, on every machine. That's how Alder's rows will meet."
+      }
+     ]
+    },
+    {
+     "id": "s4_3",
+     "visual": "All four benches sort at once. Birch's chips drop into bin 0, Alder's into bin 1, and Cedar's, Dune's and Elm's all into bin 4. Bins 2 and 3 stay empty on every bench.",
+     "sentences": [
+      {
+       "text": "Now watch where the clinics go. Birch, bin 0. Alder, bin 1.",
+       "say": "Now watch where the clinics go. Birch, bin zero. Alder, bin one."
+      },
+      {
+       "text": "And Cedar, Dune and Elm all land in bin 4. Two bins get nothing at all.",
+       "say": "And Cedar, Dune and Elm all land in bin four. Two bins get nothing at all."
+      },
+      {
+       "text": "A hash scatters keys. It doesn't deal them out evenly."
+      }
+     ]
+    },
+    {
+     "id": "s4_4",
+     "visual": "Each bench writes its bins to a small disk beside it, labelled local disk. The network band stays dark.",
+     "sentences": [
+      {
+       "text": "Each task writes its bins to its own machine's disk."
+      },
+      {
+       "text": "Notice that nothing has crossed the network yet."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "S05_Wait",
+   "chapter": "Everyone waits",
+   "segments": [
+    {
+     "id": "s5_1",
+     "visual": "The wall glows. The map tasks finish one by one; each finished bench shows a tick and waits.",
+     "sentences": [
+      {
+       "text": "So why the wall? Why can't a reducer start as soon as one pile is sorted?"
+      },
+      {
+       "text": "Because every reducer needs a piece of every pile. Until the last pile is sorted, no reducer has all of its rows."
+      }
+     ]
+    },
+    {
+     "id": "s5_2",
+     "visual": "The last bench ticks, and the wall opens.",
+     "sentences": [
+      {
+       "text": "So the fastest machines wait for the slowest. Remember that wait. It comes back."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "S06_Fetch",
+   "chapter": "Everyone fetches",
+   "segments": [
+    {
+     "id": "s6_1",
+     "visual": "Five reduce tasks take core slots: reducers 0 and 4 on the first bench, 1 on the second, 2 on the third, 3 on the fourth. Each reaches into every bench's disk for its bin; beams cross the network band. Reducers 2 and 3 have nothing to fetch: Spark knows their bins are empty, so they stay put.",
+     "sentences": [
+      {
+       "text": "Now the second half. Each reducer visits every machine and fetches its bin."
+      },
+      {
+       "text": "Four piles and five reducers make 20 possible bins. Only 12 hold any rows, and only those 12 are fetched.",
+       "say": "Four piles and five reducers make twenty possible bins. Only twelve hold any rows, and only those twelve are fetched."
+      }
+     ]
+    },
+    {
+     "id": "s6_2",
+     "visual": "Beams that leave their own bench turn yellow, with a running total: 9 of 12 bins, 79 of 103 rows. The 3 bins read on their own bench stay grey. Small label: reducers as placed on the home shot.",
+     "sentences": [
+      {
+       "text": "With our reducers placed like this, 9 of those bins cross the network: 79 of our 103 patients, on the move.",
+       "say": "With our reducers placed like this, nine of those bins cross the network: seventy-nine of our hundred and three patients, on the move."
+      }
+     ]
+    },
+    {
+     "id": "s6_3",
+     "visual": "Results land. Reducer 0 holds Birch's 30, reducer 1 Alder's 30, reducer 4 Cedar's 20, Dune's 12 and Elm's 11, 43 together. Reducers 2 and 3 are empty. Each clinic's count appears beside it.",
+     "sentences": [
+      {
+       "text": "Now each clinic is in one place. Birch's 30 on one reducer, Alder's 30 on another, and 43 patients from three clinics, crowded onto a third.",
+       "say": "Now each clinic is in one place. Birch's thirty on one reducer, Alder's thirty on another, and forty-three patients from three clinics, crowded onto a third."
+      },
+      {
+       "text": "And two reducers did nothing at all."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "S07_SendLess",
+   "chapter": "Send less",
+   "segments": [
+    {
+     "id": "s7_1",
+     "visual": "Line 3 glows: df.groupBy(\"clinic\").count().collect(). Rewind to the map side. Each tray's chips collapse into small number cards, one per clinic; Alder's cards read 9, 5, 8 and 8.",
+     "sentences": [
+      {
+       "text": "But to count patients, do we really need to move every patient?"
+      },
+      {
+       "text": "Each machine can count its own pile first, and send just the numbers."
+      }
+     ]
+    },
+    {
+     "id": "s7_2",
+     "visual": "The bins now hold number cards. A ledger for the same count with and without partial counts: rows crossing the wall, 103 to 20; bytes written, 1,075 to 998; and at ten thousand times the cast, 1,042,872 bytes to 2,048.",
+     "sentences": [
+      {
+       "text": "Now each machine sends one number per clinic: 20 small rows instead of 103.",
+       "say": "Now each machine sends one number per clinic: twenty small rows instead of a hundred and three."
+      },
+      {
+       "text": "On a cast this small, bytes barely fall, from 1,075 to 998, because every bin carries a fixed overhead.",
+       "say": "On a cast this small, bytes barely fall, from a thousand and seventy-five, to nine hundred and ninety-eight, because every bin carries a fixed overhead."
+      },
+      {
+       "text": "Scale the cast up ten thousand times, and the count writes about 2,000 bytes instead of over a million.",
+       "say": "Scale the cast up ten thousand times, and the count writes about two thousand bytes instead of over a million."
+      }
+     ]
+    },
+    {
+     "id": "s7_3",
+     "visual": "The plan tree: a partial count before the Exchange, a final count after it.",
+     "sentences": [
+      {
+       "text": "Spark does this by itself. Its plan counts twice: a partial count before the wall, and a final count after it."
+      }
+     ]
+    },
+    {
+     "id": "s7_4",
+     "visual": "Line 4 glows: df.groupBy(\"clinic\").agg(F.collect_list(\"y\")).collect(). The number cards turn back into bundles of chips. Ledger: 20 rows, 1,502 bytes.",
+     "sentences": [
+      {
+       "text": "Not every question shrinks like that. Ask for the list of every patient's outcome, and every value still has to travel."
+      },
+      {
+       "text": "Still 20 rows, but each one carries a whole list, and the bytes climb to 1,502.",
+       "say": "Still twenty rows, but each one carries a whole list, and the bytes climb to fifteen hundred and two."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "S08_Collide",
+   "chapter": "Collisions",
+   "segments": [
+    {
+     "id": "s8_1",
+     "visual": "Line 5 glows: spark.conf.set(\"spark.sql.shuffle.partitions\", 3). Three reducers. Bin 2 fills with Alder, Birch and Elm (71 patients), bin 1 with Cedar and Dune (32), and bin 0 stays empty.",
+     "sentences": [
+      {
+       "text": "What if we ask for three reducers instead?"
+      },
+      {
+       "text": "Alder, Birch and Elm all hash to the same one: 71 patients. Cedar and Dune share another: 32. The third gets nothing.",
+       "say": "Alder, Birch and Elm all hash to the same one: seventy-one patients. Cedar and Dune share another: thirty-two. The third gets nothing."
+      }
+     ]
+    },
+    {
+     "id": "s8_2",
+     "visual": "The three reducer trays stand side by side as columns of 71, 32 and 0 patients, labelled: patients, if every row moved.",
+     "sentences": [
+      {
+       "text": "A stage ends when its busiest task ends. On real data, one crowded reducer can hold up a whole job."
+      }
+     ]
+    },
+    {
+     "id": "s8_3",
+     "visual": "Settings card: spark.sql.shuffle.partitions, default 200. The five clinics light 5 of 200 reducer slots; then all 200, busy and empty alike, merge into one task.",
+     "sentences": [
+      {
+       "text": "And Spark's default is 200 reducers. For five clinics, that's 195 tasks with nothing to read.",
+       "say": "And Spark's default is two hundred reducers. For five clinics, that's a hundred and ninety-five tasks with nothing to read."
+      },
+      {
+       "text": "Normally, adaptive execution sees that the bins are tiny, and merges them into a single task. We switched that off today, so you could see every bin."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "S09_Recap",
+   "chapter": "Recap",
+   "segments": [
+    {
+     "id": "s9_1",
+     "visual": "Three recap cards with icons: bins on a disk, a wall, number cards.",
+     "sentences": [
+      {
+       "text": "Let's gather it up."
+      },
+      {
+       "text": "A shuffle sorts every pile into bins by key, and writes them to local disk."
+      },
+      {
+       "text": "Then a wall, and each reducer fetches its bin from every machine."
+      },
+      {
+       "text": "And Spark sends less when it can: partial results instead of every row."
+      }
+     ]
+    },
+    {
+     "id": "s9_2",
+     "visual": "The hash box again, sending the five clinics into bins 0, 1 and 4.",
+     "sentences": [
+      {
+       "text": "Along the way, the hash put five clinics into three bins, and left two reducers idle."
+      }
+     ]
+    },
+    {
+     "id": "s9_3",
+     "visual": "Teaser: the code panel and the plan tree side by side, a question mark over hashpartitioning. Next episode title: Say what, not how.",
+     "sentences": [
+      {
+       "text": "Our code never said hash, or bins. We asked a question, and Spark chose how to answer it."
+      },
+      {
+       "text": "Next time: who makes that choice, and how."
+      }
+     ]
+    },
+    {
+     "id": "s9_4",
+     "visual": "Series end card with the next episode title.",
+     "sentences": [
+      {
+       "text": "This has been Spark, Visually. Thanks for watching the cluster with us."
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

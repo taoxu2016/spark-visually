@@ -1,0 +1,429 @@
+{
+ "s1_1": {
+  "scene": "S01_ColdOpen",
+  "file": "audio/segments/s1_1.wav",
+  "duration": 9.046,
+  "sentences": [
+   {
+    "text": "Here's a simple question: how many patients does each clinic have?",
+    "start": 0.0,
+    "end": 3.861
+   },
+   {
+    "text": "Our 103 patients are spread across four machines, in four piles.",
+    "start": 4.181,
+    "end": 8.896
+   }
+  ]
+ },
+ "s1_2": {
+  "scene": "S01_ColdOpen",
+  "file": "audio/segments/s1_2.wav",
+  "duration": 10.71,
+  "sentences": [
+   {
+    "text": "Take Alder. It has 9 patients on this machine, 5 on this one, and 8 on each of the last two.",
+    "start": 0.0,
+    "end": 5.952
+   },
+   {
+    "text": "No machine can count Alder by itself. Alder's rows have to meet.",
+    "start": 6.272,
+    "end": 10.56
+   }
+  ]
+ },
+ "s1_3": {
+  "scene": "S01_ColdOpen",
+  "file": "audio/segments/s1_3.wav",
+  "duration": 13.291,
+  "sentences": [
+   {
+    "text": "We could send every row to the driver and count there. For 103 rows, fine. For a whole registry, the driver chokes.",
+    "start": 0.0,
+    "end": 8.021
+   },
+   {
+    "text": "So Spark does something smarter: it moves rows sideways, between the machines.",
+    "start": 8.341,
+    "end": 13.141
+   }
+  ]
+ },
+ "s2_1": {
+  "scene": "S02_Title",
+  "file": "audio/segments/s2_1.wav",
+  "duration": 4.118,
+  "sentences": [
+   {
+    "text": "Welcome to Spark, Visually.",
+    "start": 0.0,
+    "end": 1.664
+   },
+   {
+    "text": "Today: everyone sends to everyone.",
+    "start": 1.984,
+    "end": 3.968
+   }
+  ]
+ },
+ "s3_1": {
+  "scene": "S03_Wall",
+  "file": "audio/segments/s3_1.wav",
+  "duration": 10.539,
+  "sentences": [
+   {
+    "text": "Every Spark plan is cut wherever rows must change machines.",
+    "start": 0.0,
+    "end": 3.648
+   },
+   {
+    "text": "At each cut stands a wall: no work on the far side starts until all the work on the near side is done.",
+    "start": 3.968,
+    "end": 10.389
+   }
+  ]
+ },
+ "s3_2": {
+  "scene": "S03_Wall",
+  "file": "audio/segments/s3_2.wav",
+  "duration": 3.243,
+  "sentences": [
+   {
+    "text": "Today, we walk through that wall, and watch what crosses it.",
+    "start": 0.0,
+    "end": 3.093
+   }
+  ]
+ },
+ "s4_1": {
+  "scene": "S04_Bins",
+  "file": "audio/segments/s4_1.wav",
+  "duration": 11.99,
+  "sentences": [
+   {
+    "text": "On the far side of the wall, we'll have five reduce tasks. Five clinics, five reducers: one each, you'd hope.",
+    "start": 0.0,
+    "end": 7.019
+   },
+   {
+    "text": "So every pile gets sorted into five bins, one for each reducer.",
+    "start": 7.339,
+    "end": 11.84
+   }
+  ]
+ },
+ "s4_2": {
+  "scene": "S04_Bins",
+  "file": "audio/segments/s4_2.wav",
+  "duration": 14.23,
+  "sentences": [
+   {
+    "text": "Which bin? Spark turns the clinic's name into a big number, called a hash, and keeps the positive remainder after dividing by five.",
+    "start": 0.0,
+    "end": 8.341
+   },
+   {
+    "text": "The same name gives the same bin, on every machine. That's how Alder's rows will meet.",
+    "start": 8.661,
+    "end": 14.08
+   }
+  ]
+ },
+ "s4_3": {
+  "scene": "S04_Bins",
+  "file": "audio/segments/s4_3.wav",
+  "duration": 13.334,
+  "sentences": [
+   {
+    "text": "Now watch where the clinics go. Birch, bin 0. Alder, bin 1.",
+    "start": 0.0,
+    "end": 4.203
+   },
+   {
+    "text": "And Cedar, Dune and Elm all land in bin 4. Two bins get nothing at all.",
+    "start": 4.523,
+    "end": 9.579
+   },
+   {
+    "text": "A hash scatters keys. It doesn't deal them out evenly.",
+    "start": 9.899,
+    "end": 13.184
+   }
+  ]
+ },
+ "s4_4": {
+  "scene": "S04_Bins",
+  "file": "audio/segments/s4_4.wav",
+  "duration": 5.953,
+  "sentences": [
+   {
+    "text": "Each task writes its bins to its own machine's disk.",
+    "start": 0.0,
+    "end": 3.029
+   },
+   {
+    "text": "Notice that nothing has crossed the network yet.",
+    "start": 3.349,
+    "end": 5.803
+   }
+  ]
+ },
+ "s5_1": {
+  "scene": "S05_Wait",
+  "file": "audio/segments/s5_1.wav",
+  "duration": 12.865,
+  "sentences": [
+   {
+    "text": "So why the wall? Why can't a reducer start as soon as one pile is sorted?",
+    "start": 0.0,
+    "end": 4.587
+   },
+   {
+    "text": "Because every reducer needs a piece of every pile. Until the last pile is sorted, no reducer has all of its rows.",
+    "start": 4.907,
+    "end": 12.715
+   }
+  ]
+ },
+ "s5_2": {
+  "scene": "S05_Wait",
+  "file": "audio/segments/s5_2.wav",
+  "duration": 5.078,
+  "sentences": [
+   {
+    "text": "So the fastest machines wait for the slowest. Remember that wait. It comes back.",
+    "start": 0.0,
+    "end": 4.928
+   }
+  ]
+ },
+ "s6_1": {
+  "scene": "S06_Fetch",
+  "file": "audio/segments/s6_1.wav",
+  "duration": 13.419,
+  "sentences": [
+   {
+    "text": "Now the second half. Each reducer visits every machine and fetches its bin.",
+    "start": 0.0,
+    "end": 4.757
+   },
+   {
+    "text": "Four piles and five reducers make 20 possible bins. Only 12 hold any rows, and only those 12 are fetched.",
+    "start": 5.077,
+    "end": 13.269
+   }
+  ]
+ },
+ "s6_2": {
+  "scene": "S06_Fetch",
+  "file": "audio/segments/s6_2.wav",
+  "duration": 8.385,
+  "sentences": [
+   {
+    "text": "With our reducers placed like this, 9 of those bins cross the network: 79 of our 103 patients, on the move.",
+    "start": 0.0,
+    "end": 8.235
+   }
+  ]
+ },
+ "s6_3": {
+  "scene": "S06_Fetch",
+  "file": "audio/segments/s6_3.wav",
+  "duration": 12.609,
+  "sentences": [
+   {
+    "text": "Now each clinic is in one place. Birch's 30 on one reducer, Alder's 30 on another, and 43 patients from three clinics, crowded onto a third.",
+    "start": 0.0,
+    "end": 10.24
+   },
+   {
+    "text": "And two reducers did nothing at all.",
+    "start": 10.56,
+    "end": 12.459
+   }
+  ]
+ },
+ "s7_1": {
+  "scene": "S07_SendLess",
+  "file": "audio/segments/s7_1.wav",
+  "duration": 8.043,
+  "sentences": [
+   {
+    "text": "But to count patients, do we really need to move every patient?",
+    "start": 0.0,
+    "end": 3.563
+   },
+   {
+    "text": "Each machine can count its own pile first, and send just the numbers.",
+    "start": 3.883,
+    "end": 7.893
+   }
+  ]
+ },
+ "s7_2": {
+  "scene": "S07_SendLess",
+  "file": "audio/segments/s7_2.wav",
+  "duration": 22.87,
+  "sentences": [
+   {
+    "text": "Now each machine sends one number per clinic: 20 small rows instead of 103.",
+    "start": 0.0,
+    "end": 6.08
+   },
+   {
+    "text": "On a cast this small, bytes barely fall, from 1,075 to 998, because every bin carries a fixed overhead.",
+    "start": 6.4,
+    "end": 15.68
+   },
+   {
+    "text": "Scale the cast up ten thousand times, and the count writes about 2,000 bytes instead of over a million.",
+    "start": 16.0,
+    "end": 22.72
+   }
+  ]
+ },
+ "s7_3": {
+  "scene": "S07_SendLess",
+  "file": "audio/segments/s7_3.wav",
+  "duration": 7.553,
+  "sentences": [
+   {
+    "text": "Spark does this by itself. Its plan counts twice: a partial count before the wall, and a final count after it.",
+    "start": 0.0,
+    "end": 7.403
+   }
+  ]
+ },
+ "s7_4": {
+  "scene": "S07_SendLess",
+  "file": "audio/segments/s7_4.wav",
+  "duration": 13.974,
+  "sentences": [
+   {
+    "text": "Not every question shrinks like that. Ask for the list of every patient's outcome, and every value still has to travel.",
+    "start": 0.0,
+    "end": 7.595
+   },
+   {
+    "text": "Still 20 rows, but each one carries a whole list, and the bytes climb to 1,502.",
+    "start": 7.915,
+    "end": 13.824
+   }
+  ]
+ },
+ "s8_1": {
+  "scene": "S08_Collide",
+  "file": "audio/segments/s8_1.wav",
+  "duration": 11.627,
+  "sentences": [
+   {
+    "text": "What if we ask for three reducers instead?",
+    "start": 0.0,
+    "end": 2.304
+   },
+   {
+    "text": "Alder, Birch and Elm all hash to the same one: 71 patients. Cedar and Dune share another: 32. The third gets nothing.",
+    "start": 2.624,
+    "end": 11.477
+   }
+  ]
+ },
+ "s8_2": {
+  "scene": "S08_Collide",
+  "file": "audio/segments/s8_2.wav",
+  "duration": 7.574,
+  "sentences": [
+   {
+    "text": "A stage ends when its busiest task ends. On real data, one crowded reducer can hold up a whole job.",
+    "start": 0.0,
+    "end": 7.424
+   }
+  ]
+ },
+ "s8_3": {
+  "scene": "S08_Collide",
+  "file": "audio/segments/s8_3.wav",
+  "duration": 18.134,
+  "sentences": [
+   {
+    "text": "And Spark's default is 200 reducers. For five clinics, that's 195 tasks with nothing to read.",
+    "start": 0.0,
+    "end": 7.701
+   },
+   {
+    "text": "Normally, adaptive execution sees that the bins are tiny, and merges them into a single task. We switched that off today, so you could see every bin.",
+    "start": 8.021,
+    "end": 17.984
+   }
+  ]
+ },
+ "s9_1": {
+  "scene": "S09_Recap",
+  "file": "audio/segments/s9_1.wav",
+  "duration": 15.617,
+  "sentences": [
+   {
+    "text": "Let's gather it up.",
+    "start": 0.0,
+    "end": 1.109
+   },
+   {
+    "text": "A shuffle sorts every pile into bins by key, and writes them to local disk.",
+    "start": 1.429,
+    "end": 6.4
+   },
+   {
+    "text": "Then a wall, and each reducer fetches its bin from every machine.",
+    "start": 6.72,
+    "end": 10.731
+   },
+   {
+    "text": "And Spark sends less when it can: partial results instead of every row.",
+    "start": 11.051,
+    "end": 15.467
+   }
+  ]
+ },
+ "s9_2": {
+  "scene": "S09_Recap",
+  "file": "audio/segments/s9_2.wav",
+  "duration": 5.462,
+  "sentences": [
+   {
+    "text": "Along the way, the hash put five clinics into three bins, and left two reducers idle.",
+    "start": 0.0,
+    "end": 5.312
+   }
+  ]
+ },
+ "s9_3": {
+  "scene": "S09_Recap",
+  "file": "audio/segments/s9_3.wav",
+  "duration": 8.491,
+  "sentences": [
+   {
+    "text": "Our code never said hash, or bins. We asked a question, and Spark chose how to answer it.",
+    "start": 0.0,
+    "end": 5.781
+   },
+   {
+    "text": "Next time: who makes that choice, and how.",
+    "start": 6.101,
+    "end": 8.341
+   }
+  ]
+ },
+ "s9_4": {
+  "scene": "S09_Recap",
+  "file": "audio/segments/s9_4.wav",
+  "duration": 4.289,
+  "sentences": [
+   {
+    "text": "This has been Spark, Visually. Thanks for watching the cluster with us.",
+    "start": 0.0,
+    "end": 4.139
+   }
+  ]
+ }
+}

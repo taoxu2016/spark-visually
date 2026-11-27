@@ -1,0 +1,47 @@
+{
+ "module": "M1 · Who does the work",
+ "question": "When I run a PySpark cell, which machine does what?",
+ "objective": "The viewer can name the driver, executors, cores and cluster manager, say which one runs their notebook code and which ones touch the data, and predict where `count` and `collect` send rows.",
+ "core_concept": "One driver plans and schedules; many executors do the work, each with a few cores. Data flows from storage straight to executors. Only plans, tasks and small results pass through the driver, unless the code asks for rows.",
+ "focus": "workers, executors and cores; who starts executors; the driver's role; Spark Connect as a thin client and what it leaves out; a read that runs no job; the count's partial counts and final task; `collect()` and the driver's memory; where DataFrame work runs; Python UDFs and their batches",
+ "sources": "from Spark's own plans, event log and results, through Spark Connect as well as a classic session, and, for the driver's memory, from Python's own allocation tracking (`tracemalloc`) of the collected rows,",
+ "misconceptions": [
+  "The driver loads the data and hands it out. (Executors read storage themselves.)",
+  "My Python runs on the cluster. (Only UDFs do; DataFrame operations run in the JVM.)",
+  "Executor and worker are the same thing. (A worker is a machine; executors are processes on it.)",
+  "More executors always means faster. (Only with enough partitions, and a driver that keeps up.)"
+ ],
+ "earlier_episodes": [],
+ "data": "The cast: 103 simulated patients in five clinics (Alder, Birch, Cedar, Dune, Elm), written as four Parquet files that Spark reads as four piles of 28, 25, 25 and 25 rows. Column x = 1 marks a higher-risk patient (46 of the 103); column y marks a readmission (42). The animation always shows a fixed cluster of one driver and four executors with two cores each; the numbers come from one machine in local mode. The table is registered as `cast`. For collect at scale, the cast is repeated 10,000 times (1,030,000 rows). The Spark Connect run used a local Spark Connect server.",
+ "deliberate_choices": [
+  "The hook names a national registry with no size; the measured ten-thousand-times figure appears in S07, because about a million rows and 533 MB would still fit on a laptop.",
+  "One Spark Connect beat (S04), checked by running the whole code panel through Spark Connect; `df.rdd` and `sparkContext` fail there, as recorded.",
+  "The code panel has two lines more than the blueprint, a Python UDF and its use, so S08 shows a real UDF and its plan node.",
+  "The count's four partial counts go to one final task, not to the driver; only the sum goes up.",
+  "Bytes on the wire are recorded but not said, because they mislead at this size: every task reports back to the driver, and collected rows travel compressed, so on the cast the count's task results outweigh the collect's. The episode speaks of rows, and of the memory they take on the driver.",
+  "In Spark 4.3 a plain Python UDF is Arrow-optimized by default, so its plan node is `ArrowEvalPython`; S08 says \"in batches\", which holds either way.",
+  "With adaptive execution on, the count runs as 2 jobs; this episode doesn't count jobs, which Episode 4 takes up.",
+  "Plain words on purpose: a pile is a partition, a wall is the boundary between stages, the cast is the example data. In the On screen notes, a chip is one record, coloured by its clinic; a tray is a pile as drawn; a bench is an executor; the driver desk is the driver; the shelf is storage."
+ ],
+ "open_questions": [
+  "S08 says the real work runs \"in Java, not Python\". Strictly it is the JVM (Spark is written mostly in Scala, and whole-stage code generation emits Java). Is \"in Java\" fair for this audience, or misleading?",
+  "S04: \"With Spark Connect, the notebook is a small client: it sends each query to a driver on the cluster, and gets back only the result.\" Is that accurate for the Databricks compute that uses Spark Connect (serverless, and standard access mode)?",
+  "S07: \"Collect lands every row on the driver: over 500 megabytes of memory\" for about a million rows. The figure is Python's memory for the collected rows, measured here. Is the claim stated fairly, and does a Databricks driver differ in a way worth saying?"
+ ],
+ "plan_blocks": [
+  [
+   "plans.count",
+   "The count's plan (explain(\"formatted\"))"
+  ],
+  [
+   "plans.collect",
+   "The collect's plan (explain(\"formatted\"))"
+  ],
+  [
+   "plans.udf",
+   "The UDF line's plan (explain(\"formatted\"))"
+  ]
+ ],
+ "omit_keys": [],
+ "stage": "after the series'\nowner approved it. The episode is already voiced and animated, so keep each fix to the words that must change."
+}

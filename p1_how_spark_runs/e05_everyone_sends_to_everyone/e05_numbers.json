@@ -1,0 +1,1080 @@
+{
+ "series": "Spark, Visually",
+ "part": "I · How Spark runs a job",
+ "episode": 5,
+ "title": "Everyone Sends to Everyone",
+ "engine": {
+  "spark": "4.3.0",
+  "master": "local[8]",
+  "settings": {
+   "spark.sql.adaptive.enabled": "true",
+   "spark.sql.adaptive.coalescePartitions.enabled": "false (true only for count_r200_coalesced)",
+   "spark.sql.shuffle.partitions": "5 then 3 (code panel), then 200 (the default, on a settings card)",
+   "spark.sql.files.maxPartitionBytes": "134217728b",
+   "spark.sql.files.openCostInBytes": "4194304b"
+  },
+  "note": "local mode: exact plans, partitions, records and bytes; no network"
+ },
+ "code_on_screen": [
+  "spark.conf.set(\"spark.sql.shuffle.partitions\", 5)",
+  "df.repartition(\"clinic\").collect()",
+  "df.groupBy(\"clinic\").count().collect()",
+  "df.groupBy(\"clinic\").agg(F.collect_list(\"y\")).collect()",
+  "spark.conf.set(\"spark.sql.shuffle.partitions\", 3)"
+ ],
+ "partial_aggregation": {
+  "scale": 10000,
+  "cast": {
+   "with": {
+    "records": 20,
+    "bytes": 998
+   },
+   "without": {
+    "records": 103,
+    "bytes": 1075
+   }
+  },
+  "scaled": {
+   "with": {
+    "records": 40,
+    "bytes": 2048
+   },
+   "without": {
+    "records": 1030000,
+    "bytes": 1042872
+   }
+  }
+ },
+ "cast": {
+  "patients": 103,
+  "readmitted": 42,
+  "per_clinic": {
+   "Birch": 30,
+   "Alder": 30,
+   "Elm": 11,
+   "Dune": 12,
+   "Cedar": 20
+  },
+  "seed": 2026
+ },
+ "trays": {
+  "0": {
+   "Alder": 9,
+   "Birch": 6,
+   "Cedar": 10,
+   "Dune": 2,
+   "Elm": 1
+  },
+  "1": {
+   "Alder": 5,
+   "Birch": 12,
+   "Cedar": 2,
+   "Dune": 3,
+   "Elm": 3
+  },
+  "2": {
+   "Alder": 8,
+   "Birch": 8,
+   "Cedar": 3,
+   "Dune": 3,
+   "Elm": 3
+  },
+  "3": {
+   "Alder": 8,
+   "Birch": 4,
+   "Cedar": 5,
+   "Dune": 4,
+   "Elm": 4
+  }
+ },
+ "tray_sizes": [
+  28,
+  25,
+  25,
+  25
+ ],
+ "hash": {
+  "Alder": {
+   "hash": -2141637979,
+   "3": 2,
+   "4": 1,
+   "5": 1,
+   "8": 5,
+   "200": 21
+  },
+  "Birch": {
+   "hash": 194916515,
+   "3": 2,
+   "4": 3,
+   "5": 0,
+   "8": 3,
+   "200": 115
+  },
+  "Cedar": {
+   "hash": -788428916,
+   "3": 1,
+   "4": 0,
+   "5": 4,
+   "8": 4,
+   "200": 84
+  },
+  "Dune": {
+   "hash": -315170486,
+   "3": 1,
+   "4": 2,
+   "5": 4,
+   "8": 2,
+   "200": 114
+  },
+  "Elm": {
+   "hash": 1141522469,
+   "3": 2,
+   "4": 1,
+   "5": 4,
+   "8": 5,
+   "200": 69
+  }
+ },
+ "occupancy": {
+  "3": {
+   "used": 2,
+   "empty": 1,
+   "shared": {
+    "1": [
+     "Cedar",
+     "Dune"
+    ],
+    "2": [
+     "Alder",
+     "Birch",
+     "Elm"
+    ]
+   }
+  },
+  "4": {
+   "used": 4,
+   "empty": 0,
+   "shared": {
+    "1": [
+     "Alder",
+     "Elm"
+    ]
+   }
+  },
+  "5": {
+   "used": 3,
+   "empty": 2,
+   "shared": {
+    "4": [
+     "Cedar",
+     "Dune",
+     "Elm"
+    ]
+   }
+  },
+  "8": {
+   "used": 4,
+   "empty": 4,
+   "shared": {
+    "5": [
+     "Alder",
+     "Elm"
+    ]
+   }
+  },
+  "200": {
+   "used": 5,
+   "empty": 195,
+   "shared": {}
+  }
+ },
+ "r3_patients_per_reducer": {
+  "1": 32,
+  "2": 71
+ },
+ "shuffles": {
+  "all_rows": {
+   "reduce_partitions": 5,
+   "map_tasks": 4,
+   "reduce_tasks": 5,
+   "blocks_possible": 20,
+   "blocks_nonempty": 12,
+   "blocks_fetched": 12,
+   "records_written": [
+    28,
+    25,
+    25,
+    25
+   ],
+   "bytes_written": [
+    551,
+    471,
+    547,
+    523
+   ],
+   "records_read": [
+    30,
+    30,
+    0,
+    0,
+    43
+   ],
+   "bytes_read": [
+    615,
+    640,
+    0,
+    0,
+    837
+   ],
+   "bins": {
+    "0,0": 6,
+    "0,1": 9,
+    "0,4": 13,
+    "1,0": 12,
+    "1,1": 5,
+    "1,4": 8,
+    "2,0": 8,
+    "2,1": 8,
+    "2,4": 9,
+    "3,0": 4,
+    "3,1": 8,
+    "3,4": 13
+   },
+   "home_shot_blocks_crossing_network": 9,
+   "home_shot_records_crossing_network": 79,
+   "total_bytes_written": 2092,
+   "total_records_written": 103
+  },
+  "count": {
+   "reduce_partitions": 5,
+   "map_tasks": 4,
+   "reduce_tasks": 5,
+   "blocks_possible": 20,
+   "blocks_nonempty": 12,
+   "blocks_fetched": 12,
+   "records_written": [
+    5,
+    5,
+    5,
+    5
+   ],
+   "bytes_written": [
+    248,
+    254,
+    243,
+    253
+   ],
+   "records_read": [
+    4,
+    4,
+    0,
+    0,
+    12
+   ],
+   "bytes_read": [
+    284,
+    283,
+    0,
+    0,
+    431
+   ],
+   "bins": {
+    "0,0": 1,
+    "0,1": 1,
+    "0,4": 3,
+    "1,0": 1,
+    "1,1": 1,
+    "1,4": 3,
+    "2,0": 1,
+    "2,1": 1,
+    "2,4": 3,
+    "3,0": 1,
+    "3,1": 1,
+    "3,4": 3
+   },
+   "home_shot_blocks_crossing_network": 9,
+   "home_shot_records_crossing_network": 15,
+   "total_bytes_written": 998,
+   "total_records_written": 20
+  },
+  "collect_list": {
+   "reduce_partitions": 5,
+   "map_tasks": 4,
+   "reduce_tasks": 5,
+   "blocks_possible": 20,
+   "blocks_nonempty": 12,
+   "blocks_fetched": 12,
+   "records_written": [
+    5,
+    5,
+    5,
+    5
+   ],
+   "bytes_written": [
+    387,
+    378,
+    361,
+    376
+   ],
+   "records_read": [
+    4,
+    4,
+    0,
+    0,
+    12
+   ],
+   "bytes_read": [
+    430,
+    427,
+    0,
+    0,
+    645
+   ],
+   "bins": {
+    "0,0": 1,
+    "0,1": 1,
+    "0,4": 3,
+    "1,0": 1,
+    "1,1": 1,
+    "1,4": 3,
+    "2,0": 1,
+    "2,1": 1,
+    "2,4": 3,
+    "3,0": 1,
+    "3,1": 1,
+    "3,4": 3
+   },
+   "home_shot_blocks_crossing_network": 9,
+   "home_shot_records_crossing_network": 15,
+   "total_bytes_written": 1502,
+   "total_records_written": 20
+  },
+  "count_r3": {
+   "reduce_partitions": 3,
+   "map_tasks": 4,
+   "reduce_tasks": 3,
+   "blocks_possible": 12,
+   "blocks_nonempty": 8,
+   "blocks_fetched": 8,
+   "records_written": [
+    5,
+    5,
+    5,
+    5
+   ],
+   "bytes_written": [
+    193,
+    201,
+    193,
+    195
+   ],
+   "records_read": [
+    0,
+    8,
+    12
+   ],
+   "bytes_read": [
+    0,
+    356,
+    426
+   ],
+   "bins": {
+    "0,1": 2,
+    "0,2": 3,
+    "1,1": 2,
+    "1,2": 3,
+    "2,1": 2,
+    "2,2": 3,
+    "3,1": 2,
+    "3,2": 3
+   },
+   "home_shot_blocks_crossing_network": 6,
+   "home_shot_records_crossing_network": 15,
+   "total_bytes_written": 782,
+   "total_records_written": 20
+  },
+  "count_r200": {
+   "reduce_partitions": 200,
+   "map_tasks": 4,
+   "reduce_tasks": 200,
+   "blocks_possible": 800,
+   "blocks_nonempty": 20,
+   "blocks_fetched": 20,
+   "records_written": [
+    5,
+    5,
+    5,
+    5
+   ],
+   "bytes_written": [
+    355,
+    353,
+    354,
+    353
+   ],
+   "records_read": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    4,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    4,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    4,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    4,
+    4,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "bytes_read": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    283,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    282,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    283,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    283,
+    284,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "bins": {
+    "0,21": 1,
+    "0,69": 1,
+    "0,84": 1,
+    "0,114": 1,
+    "0,115": 1,
+    "1,21": 1,
+    "1,69": 1,
+    "1,84": 1,
+    "1,114": 1,
+    "1,115": 1,
+    "2,21": 1,
+    "2,69": 1,
+    "2,84": 1,
+    "2,114": 1,
+    "2,115": 1,
+    "3,21": 1,
+    "3,69": 1,
+    "3,84": 1,
+    "3,114": 1,
+    "3,115": 1
+   },
+   "home_shot_blocks_crossing_network": 15,
+   "home_shot_records_crossing_network": 15,
+   "total_bytes_written": 1415,
+   "total_records_written": 20
+  }
+ },
+ "count_r200_coalesced_reduce_tasks": 1,
+ "driver": {
+  "collect_result_bytes": 8681,
+  "count_result_bytes": 3895,
+  "count_partials_to_final_task": 4
+ },
+ "plans": {
+  "count": "== Physical Plan ==\nAdaptiveSparkPlan (5)\n+- HashAggregate (4)\n   +- Exchange (3)\n      +- HashAggregate (2)\n         +- Scan parquet  (1)\n\n\n(1) Scan parquet \nOutput [1]: [clinic#5]\nBatched: true\nLocation: InMemoryFileIndex [file:/tmp/sv_e05/cast]\nReadSchema: struct<clinic:string>\n\n(2) HashAggregate\nInput [1]: [clinic#5]\nKeys [1]: [clinic#5]\nFunctions [1]: [partial_count(1)]\nAggregate Attributes [1]: [count#98L]\nResults [2]: [clinic#5, count#99L]\n\n(3) Exchange\nInput [2]: [clinic#5, count#99L]\nArguments: hashpartitioning(clinic#5, 5), ENSURE_REQUIREMENTS, [plan_id=235]\n\n(4) HashAggregate\nInput [2]: [clinic#5, count#99L]\nKeys [1]: [clinic#5]\nFunctions [1]: [count(1)]\nAggregate Attributes [1]: [count(1)#45L]\nResults [2]: [clinic#5, count(1)#45L AS count#40L]\n\n(5) AdaptiveSparkPlan\nOutput [2]: [clinic#5, count#40L]\nArguments: isFinalPlan=false",
+  "collect_list": "== Physical Plan ==\nAdaptiveSparkPlan (5)\n+- ObjectHashAggregate (4)\n   +- Exchange (3)\n      +- ObjectHashAggregate (2)\n         +- Scan parquet  (1)\n\n\n(1) Scan parquet \nOutput [2]: [clinic#5, y#7]\nBatched: true\nLocation: InMemoryFileIndex [file:/tmp/sv_e05/cast]\nReadSchema: struct<clinic:string,y:int>\n\n(2) ObjectHashAggregate\nInput [2]: [clinic#5, y#7]\nKeys [1]: [clinic#5]\nFunctions [1]: [partial_collect_list(y#7, 0, 0, true)]\nAggregate Attributes [1]: [buf#100]\nResults [2]: [clinic#5, buf#101]\n\n(3) Exchange\nInput [2]: [clinic#5, buf#101]\nArguments: hashpartitioning(clinic#5, 5), ENSURE_REQUIREMENTS, [plan_id=250]\n\n(4) ObjectHashAggregate\nInput [2]: [clinic#5, buf#101]\nKeys [1]: [clinic#5]\nFunctions [1]: [collect_list(y#7, 0, 0, true)]\nAggregate Attributes [1]: [collect_list(y#7)#50]\nResults [2]: [clinic#5, collect_list(y#7)#50 AS collect_list(y)#51]\n\n(5) AdaptiveSparkPlan\nOutput [2]: [clinic#5, collect_list(y)#51]\nArguments: isFinalPlan=false",
+  "all_rows": "== Physical Plan ==\nAdaptiveSparkPlan (3)\n+- Exchange (2)\n   +- Scan parquet  (1)\n\n\n(1) Scan parquet \nOutput [4]: [patient#4, clinic#5, x#6, y#7]\nBatched: true\nLocation: InMemoryFileIndex [file:/tmp/sv_e05/cast]\nReadSchema: struct<patient:int,clinic:string,x:int,y:int>\n\n(2) Exchange\nInput [4]: [patient#4, clinic#5, x#6, y#7]\nArguments: hashpartitioning(clinic#5, 5), REPARTITION_BY_COL, [plan_id=260]\n\n(3) AdaptiveSparkPlan\nOutput [4]: [patient#4, clinic#5, x#6, y#7]\nArguments: isFinalPlan=false"
+ },
+ "checks": [
+  {
+   "name": "pinned engine: Apache Spark 4.3.0",
+   "ok": true,
+   "detail": "4.3.0"
+  },
+  {
+   "name": "the cast is four files and reads as four trays",
+   "ok": true,
+   "detail": "4 files, 4 partitions"
+  },
+  {
+   "name": "trays hold all 103 patients",
+   "ok": true,
+   "detail": "[28, 25, 25, 25]"
+  },
+  {
+   "name": "every clinic's rows are spread over the trays as the cast says",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "Alder's chips sit on all four benches (the hook)",
+   "ok": true,
+   "detail": "[9, 5, 8, 8]"
+  },
+  {
+   "name": "count() is 103",
+   "ok": true,
+   "detail": "103"
+  },
+  {
+   "name": "line 1 sets five reducers",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "lines 2 to 4 are actions, and run as typed",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "the count plan has one Exchange, hash-partitioned by clinic into 5",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "the count plan aggregates twice: partial before the wall, final after it",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "groupBy count matches the cast",
+   "ok": true,
+   "detail": "{'Birch': 30, 'Alder': 30, 'Elm': 11, 'Dune': 12, 'Cedar': 20}"
+  },
+  {
+   "name": "each clinic lands where pmod(hash, 5) says (count)",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "each clinic lands where pmod(hash, 5) says (every chip)",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "each clinic lands where pmod(hash, 5) says (collect_list)",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "collect_list carries every value",
+   "ok": true,
+   "detail": "{'Birch': 30, 'Alder': 30, 'Elm': 11, 'Dune': 12, 'Cedar': 20}"
+  },
+  {
+   "name": "each clinic lands where pmod(hash, 3) says",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "each clinic lands where pmod(hash, 200) says",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "all_rows: one map task per tray",
+   "ok": true,
+   "detail": "4"
+  },
+  {
+   "name": "all_rows: one reduce task per reduce partition",
+   "ok": true,
+   "detail": "5"
+  },
+  {
+   "name": "all_rows: records written per bin agree with the event log",
+   "ok": true,
+   "detail": "103 written, 103 read"
+  },
+  {
+   "name": "all_rows: reducers fetch exactly the non-empty bins",
+   "ok": true,
+   "detail": "12 fetched, 12 non-empty"
+  },
+  {
+   "name": "count: one map task per tray",
+   "ok": true,
+   "detail": "4"
+  },
+  {
+   "name": "count: one reduce task per reduce partition",
+   "ok": true,
+   "detail": "5"
+  },
+  {
+   "name": "count: records written per bin agree with the event log",
+   "ok": true,
+   "detail": "20 written, 20 read"
+  },
+  {
+   "name": "count: reducers fetch exactly the non-empty bins",
+   "ok": true,
+   "detail": "12 fetched, 12 non-empty"
+  },
+  {
+   "name": "collect_list: one map task per tray",
+   "ok": true,
+   "detail": "4"
+  },
+  {
+   "name": "collect_list: one reduce task per reduce partition",
+   "ok": true,
+   "detail": "5"
+  },
+  {
+   "name": "collect_list: records written per bin agree with the event log",
+   "ok": true,
+   "detail": "20 written, 20 read"
+  },
+  {
+   "name": "collect_list: reducers fetch exactly the non-empty bins",
+   "ok": true,
+   "detail": "12 fetched, 12 non-empty"
+  },
+  {
+   "name": "count_r3: one map task per tray",
+   "ok": true,
+   "detail": "4"
+  },
+  {
+   "name": "count_r3: one reduce task per reduce partition",
+   "ok": true,
+   "detail": "3"
+  },
+  {
+   "name": "count_r3: records written per bin agree with the event log",
+   "ok": true,
+   "detail": "20 written, 20 read"
+  },
+  {
+   "name": "count_r3: reducers fetch exactly the non-empty bins",
+   "ok": true,
+   "detail": "8 fetched, 8 non-empty"
+  },
+  {
+   "name": "count_r200: one map task per tray",
+   "ok": true,
+   "detail": "4"
+  },
+  {
+   "name": "count_r200: one reduce task per reduce partition",
+   "ok": true,
+   "detail": "200"
+  },
+  {
+   "name": "count_r200: records written per bin agree with the event log",
+   "ok": true,
+   "detail": "20 written, 20 read"
+  },
+  {
+   "name": "count_r200: reducers fetch exactly the non-empty bins",
+   "ok": true,
+   "detail": "20 fetched, 20 non-empty"
+  },
+  {
+   "name": "every chip crosses the wall when nothing is combined",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "partial counts cut the rows crossing the wall (the same count, with and without them)",
+   "ok": true,
+   "detail": "{'with': {'records': 20, 'bytes': 998}, 'without': {'records': 103, 'bytes': 1075}}"
+  },
+  {
+   "name": "on the cast, bytes barely fall: each bin's fixed overhead outweighs the rows saved",
+   "ok": true,
+   "detail": "{'with': {'records': 20, 'bytes': 998}, 'without': {'records': 103, 'bytes': 1075}}"
+  },
+  {
+   "name": "at ten thousand times the cast, partial counts cut the bytes by over 99 percent",
+   "ok": true,
+   "detail": "{'with': {'records': 40, 'bytes': 2048}, 'without': {'records': 1030000, 'bytes': 1042872}}"
+  },
+  {
+   "name": "collect_list sends as many records as count, but more bytes",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "adaptive coalescing merges the 200 tiny reduce partitions",
+   "ok": true,
+   "detail": "1 reduce tasks"
+  },
+  {
+   "name": "count(): four partial counts meet in one final task, which returns one number",
+   "ok": true,
+   "detail": ""
+  }
+ ]
+}

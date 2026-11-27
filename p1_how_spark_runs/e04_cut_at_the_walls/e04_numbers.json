@@ -1,0 +1,323 @@
+{
+ "series": "Spark, Visually",
+ "part": "I · How Spark runs a job",
+ "episode": 4,
+ "title": "Cut at the Walls",
+ "engine": {
+  "spark": "4.3.0",
+  "master": "local[8]",
+  "cpus": 1,
+  "settings": {
+   "spark.sql.adaptive.enabled": "true",
+   "spark.sql.shuffle.partitions": "200",
+   "spark.sql.adaptive.coalescePartitions.enabled": "true",
+   "spark.sql.autoBroadcastJoinThreshold": "10485760b"
+  },
+  "note": "local mode: exact plans, jobs, stages and tasks; order in time, not durations"
+ },
+ "code_on_screen": [
+  "hi = df.filter(F.col(\"x\") == 1)",
+  "per_clinic = hi.groupBy(\"clinic\").count()",
+  "per_clinic.collect()",
+  "per_clinic.explain()",
+  "df.join(clinics.hint(\"merge\"), \"clinic\").collect()"
+ ],
+ "cast": {
+  "patients": 103,
+  "files": 4,
+  "seed": 2026
+ },
+ "counts": {
+  "Alder": 6,
+  "Cedar": 10,
+  "Dune": 6,
+  "Birch": 24
+ },
+ "explain_before": "== Physical Plan ==\nAdaptiveSparkPlan isFinalPlan=false\n+- HashAggregate(keys=[clinic#5], functions=[count(1)])\n   +- Exchange hashpartitioning(clinic#5, 200), ENSURE_REQUIREMENTS, [plan_id=29]\n      +- HashAggregate(keys=[clinic#5], functions=[partial_count(1)])\n         +- Project [clinic#5]\n            +- Filter (isnotnull(x#6) AND (x#6 = 1))\n               +- FileScan parquet [clinic#5,x#6] Batched: true, DataFilters: [isnotnull(x#6), (x#6 = 1)], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/tmp/sv_e04/cast], PartitionFilters: [], PushedFilters: [IsNotNull(x), EqualTo(x,1)], ReadSchema: struct<clinic:string,x:int>",
+ "explain": "== Physical Plan ==\nAdaptiveSparkPlan isFinalPlan=true\n+- == Final Plan ==\n   ResultQueryStage 1\n   +- *(2) HashAggregate(keys=[clinic#5], functions=[count(1)])\n      +- AQEShuffleRead coalesced\n         +- ShuffleQueryStage 0\n            +- Exchange hashpartitioning(clinic#5, 200), ENSURE_REQUIREMENTS, [plan_id=53]\n               +- *(1) HashAggregate(keys=[clinic#5], functions=[partial_count(1)])\n                  +- *(1) Project [clinic#5]\n                     +- *(1) Filter (isnotnull(x#6) AND (x#6 = 1))\n                        +- *(1) ColumnarToRow\n                           +- FileScan parquet [clinic#5,x#6] Batched: true, DataFilters: [isnotnull(x#6), (x#6 = 1)], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/tmp/sv_e04/cast], PartitionFilters: [], PushedFilters: [IsNotNull(x), EqualTo(x,1)], ReadSchema: struct<clinic:string,x:int>\n+- == Initial Plan ==\n   HashAggregate(keys=[clinic#5], functions=[count(1)])\n   +- Exchange hashpartitioning(clinic#5, 200), ENSURE_REQUIREMENTS, [plan_id=29]\n      +- HashAggregate(keys=[clinic#5], functions=[partial_count(1)])\n         +- Project [clinic#5]\n            +- Filter (isnotnull(x#6) AND (x#6 = 1))\n               +- FileScan parquet [clinic#5,x#6] Batched: true, DataFilters: [isnotnull(x#6), (x#6 = 1)], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/tmp/sv_e04/cast], PartitionFilters: [], PushedFilters: [IsNotNull(x), EqualTo(x,1)], ReadSchema: struct<clinic:string,x:int>",
+ "explain_shown": "== Physical Plan ==\nAdaptiveSparkPlan isFinalPlan=true\n+- == Final Plan ==\n   ResultQueryStage 1\n   +- *(2) HashAggregate(keys=[clinic#5], functions=[count(1)])\n      +- AQEShuffleRead coalesced\n         +- ShuffleQueryStage 0\n            +- Exchange hashpartitioning(clinic#5, 200), ENSURE_REQUIREMENTS, [plan_id=53]\n               +- *(1) HashAggregate(keys=[clinic#5], functions=[partial_count(1)])\n                  +- *(1) Project [clinic#5]\n                     +- *(1) Filter (isnotnull(x#6) AND (x#6 = 1))\n                        +- *(1) ColumnarToRow\n                           +- FileScan parquet [clinic#5,x#6] Batched: true, DataFilters: [isnotnull(x#6), (x#6 = 1)], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/tmp/sv_e04/cast], PartitionFilters: [], PushedFilters: [IsNotNull(x), EqualTo(x,1)], ReadSchema: struct<clinic:string,x:int>",
+ "query_stage_ids": [
+  0,
+  1
+ ],
+ "exchanges": [
+  "hashpartitioning(clinic#5, 200)"
+ ],
+ "card_aqe_off": [
+  "spark.conf.set(\"spark.sql.adaptive.enabled\", False)",
+  "hi.groupBy(\"clinic\").count().collect()"
+ ],
+ "counted_piles_per_clinic": {
+  "Alder": 3,
+  "Cedar": 3,
+  "Dune": 4,
+  "Birch": 4
+ },
+ "trays": {
+  "0": {
+   "Alder": 9,
+   "Birch": 6,
+   "Cedar": 10,
+   "Dune": 2,
+   "Elm": 1
+  },
+  "1": {
+   "Alder": 5,
+   "Birch": 12,
+   "Cedar": 2,
+   "Dune": 3,
+   "Elm": 3
+  },
+  "2": {
+   "Alder": 8,
+   "Birch": 8,
+   "Cedar": 3,
+   "Dune": 3,
+   "Elm": 3
+  },
+  "3": {
+   "Alder": 8,
+   "Birch": 4,
+   "Cedar": 5,
+   "Dune": 4,
+   "Elm": 4
+  }
+ },
+ "connect": {
+  "explain_after_run_is_final": false,
+  "explain_after_run": "== Physical Plan ==\nAdaptiveSparkPlan isFinalPlan=false\n+- HashAggregate(keys=[clinic#2], functions=[count(1)])\n   +- Exchange hashpartitioning(clinic#2, 200), ENSURE_REQUIREMENTS, [plan_id=76]\n      +- HashAggregate(keys=[clinic#2], functions=[partial_count(1)])\n         +- Project [clinic#2]\n            +- Filter (isnotnull(x#3) AND (x#3 = 1))\n               +- FileScan parquet [clinic#2,x#3] Batched: true, DataFilters: [isnotnull(x#3), (x#3 = 1)], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/tmp/sv_e04/cast], PartitionFilters: [], PushedFilters: [IsNotNull(x), EqualTo(x,1)], ReadSchema: struct<clinic:string,x:int>"
+ },
+ "final_plan": "== Physical Plan ==\n+- == Final Plan ==\n   ResultQueryStage (10), Statistics(sizeInBytes=8.0 EiB)\n   +- * HashAggregate (9)\n      +- AQEShuffleRead (8), coalesced\n         +- ShuffleQueryStage (7), Statistics(sizeInBytes=448.0 B, rowCount=14)\n            +- Exchange (6)\n               +- * HashAggregate (5)\n                  +- * Project (4)\n                     +- * Filter (3)\n                        +- * ColumnarToRow (2)\n                           +- Scan parquet  (1)",
+ "codegen_ids": [
+  1,
+  2
+ ],
+ "plan_operators": 16,
+ "main": {
+  "jobs": 2,
+  "job_ids": [
+   2,
+   3
+  ],
+  "stages_run": 2,
+  "stages_per_job": [
+   1,
+   1
+  ],
+  "skipped_per_job": [
+   0,
+   1
+  ],
+  "stage_ids": [
+   2,
+   4
+  ],
+  "skipped_ids": [
+   3
+  ],
+  "stage1_finish_order": [
+   3,
+   2,
+   0,
+   1
+  ],
+  "partial_counts_crossing": 14,
+  "tasks": [
+   4,
+   1
+  ],
+  "skipped_in_second_job": 1,
+  "total_tasks": 5,
+  "stage1_finish_offsets_ms": [
+   0,
+   9,
+   11,
+   12
+  ],
+  "stage2_after_last_stage1_ms": 289
+ },
+ "again": {
+  "stages_run": 1,
+  "stages_skipped": 1
+ },
+ "aqe_off": {
+  "jobs": 1,
+  "stages_run": 2,
+  "tasks": [
+   4,
+   200
+  ],
+  "total_tasks": 204,
+  "nonempty_piles": [
+   21,
+   84,
+   114,
+   115
+  ]
+ },
+ "join": {
+  "stages_run": 3,
+  "input_tasks": [
+   4,
+   1
+  ],
+  "join_tasks": 1,
+  "inputs_overlap": true,
+  "stages_in_order": [
+   {
+    "tasks": 4,
+    "start_ms": 0,
+    "end_ms": 161
+   },
+   {
+    "tasks": 1,
+    "start_ms": 12,
+    "end_ms": 159
+   },
+   {
+    "tasks": 1,
+    "start_ms": 482,
+    "end_ms": 706
+   }
+  ],
+  "note_order": "the two input stages are submitted together; which gets the lower stage number varies",
+  "windows_ms": [
+   [
+    0,
+    161
+   ],
+   [
+    12,
+    159
+   ],
+   [
+    482,
+    706
+   ]
+  ],
+  "default_strategy": "BroadcastHashJoin, broadcasting the clinic table",
+  "note": "the merge hint asks for a sort-merge join, so both sides are dealt by clinic"
+ },
+ "checks": [
+  {
+   "name": "pinned engine: Apache Spark 4.3.0",
+   "ok": true,
+   "detail": "4.3.0"
+  },
+  {
+   "name": "the per-clinic counts of higher-risk patients",
+   "ok": true,
+   "detail": "{'Alder': 6, 'Cedar': 10, 'Dune': 6, 'Birch': 24}"
+  },
+  {
+   "name": "the join keeps every patient",
+   "ok": true,
+   "detail": "103"
+  },
+  {
+   "name": "the settings card's count gives the same answer",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "by default Spark broadcasts the clinic table (the shortcut the hint turns down)",
+   "ok": true,
+   "detail": "+- FileScan parquet [clinic#44,card#45] Batched: true, DataFilters: [i"
+  },
+  {
+   "name": "through Spark Connect, explain() after the run still prints the starting plan, without codegen markers",
+   "ok": true,
+   "detail": "pyspark.sql.connect.session"
+  },
+  {
+   "name": "lines 1 and 2 and explain() run no job",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "before the run, explain() shows the starting plan, with no codegen markers",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "the printed plan as it ran has one Exchange line, and adaptive execution's own query stages 0 and 1",
+   "ok": true,
+   "detail": "[0, 1]"
+  },
+  {
+   "name": "after the run, explain() shows the plan as it ran, with codegen markers *(1) and *(2)",
+   "ok": true,
+   "detail": "[1, 2]"
+  },
+  {
+   "name": "the action's jobs belong to one SQL execution",
+   "ok": true,
+   "detail": "{'1'}"
+  },
+  {
+   "name": "the plan as it ran (the UI's SQL tab) is final and carries codegen ids 1 and 2",
+   "ok": true,
+   "detail": "[1, 2], 16 numbered operators"
+  },
+  {
+   "name": "explain() shows one Exchange, hash-partitioned by clinic into 200",
+   "ok": true,
+   "detail": "[('hashpartitioning', 'clinic#5, 200')]"
+  },
+  {
+   "name": "with adaptive execution: two jobs, two stages that run, four tasks then one",
+   "ok": true,
+   "detail": "2 jobs, stages [2, 4], tasks [4, 1]"
+  },
+  {
+   "name": "the second job lists the first stage's work again, as a skipped stage (new number, same four tasks)",
+   "ok": true,
+   "detail": "skipped [3]"
+  },
+  {
+   "name": "the wall: stage 2 starts only after stage 1's last task has finished",
+   "ok": true,
+   "detail": "stage 2 at 289 ms after the last stage-1 task"
+  },
+  {
+   "name": "14 partial counts cross the wall: one per clinic present in each pile",
+   "ok": true,
+   "detail": "14 records written; piles per clinic {'Alder': 3, 'Cedar': 3, 'Dune': 4, 'Birch': 4}"
+  },
+  {
+   "name": "stage 1's tasks finish at different moments, and wait",
+   "ok": true,
+   "detail": "[0, 9, 11, 12]"
+  },
+  {
+   "name": "codegen ids are not stage numbers",
+   "ok": true,
+   "detail": "codegen [1, 2], stages [2, 4]"
+  },
+  {
+   "name": "running the action again skips its first stage: the shuffle files are reused",
+   "ok": true,
+   "detail": "ran [15], skipped [14]"
+  },
+  {
+   "name": "adaptive execution off: only the piles holding a clinic's counts have rows",
+   "ok": true,
+   "detail": "[21, 84, 114, 115]"
+  },
+  {
+   "name": "without adaptive execution: one job, two stages, four tasks then 200",
+   "ok": true,
+   "detail": "1 job, tasks [4, 200]"
+  },
+  {
+   "name": "the join line runs as three stages",
+   "ok": true,
+   "detail": "{20: 4, 21: 1, 24: 1}"
+  },
+  {
+   "name": "its two input stages run at the same time",
+   "ok": true,
+   "detail": "{20: (0, 161), 21: (12, 159), 24: (482, 706)}"
+  }
+ ]
+}

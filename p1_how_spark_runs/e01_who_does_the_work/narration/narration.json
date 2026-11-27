@@ -1,0 +1,324 @@
+{
+ "series": "Spark, Visually",
+ "arc": "Part I · How Spark Runs a Job",
+ "episode": 1,
+ "title": "Who Does the Work",
+ "subtitle": "driver, executors, cores",
+ "name": "SparkVisually_P1_E01_WhoDoesTheWork",
+ "status": "Script approved by the owner on 26 Nov 2026; revised after the second-model review (line 5 now sums the UDF, which a count would prune; s9_2 says the count read the table with 4 tasks). Voiced with am_fenrir.",
+ "voice": {
+  "engine": "kokoro-onnx v1.0",
+  "name": "am_fenrir",
+  "speed": 0.92,
+  "lang": "en-us",
+  "pause_between_sentences": 0.32,
+  "tail_pad": 0.15
+ },
+ "pronunciations": {},
+ "scenes": [
+  {
+   "id": "S01_ColdOpen",
+   "chapter": null,
+   "segments": [
+    {
+     "id": "s1_1",
+     "visual": "A laptop card holds the cast: 103 chips in the clinic hues, its memory bar barely touched.",
+     "sentences": [
+      {
+       "text": "Here are our 103 patients. They fit on one laptop, with plenty of room to spare.",
+       "say": "Here are our hundred and three patients. They fit on one laptop, with plenty of room to spare."
+      },
+      {
+       "text": "Now picture a national registry: every patient, every visit, for years."
+      }
+     ]
+    },
+    {
+     "id": "s1_2",
+     "visual": "The registry pours in: the laptop's memory bar floods red and chips spill over its edge.",
+     "sentences": [
+      {
+       "text": "The laptop's memory fills, and then it overflows. One machine isn't enough."
+      },
+      {
+       "text": "So we spread the work across many machines. But then, which machine does what?"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "S02_Title",
+   "chapter": null,
+   "segments": [
+    {
+     "id": "s2_1",
+     "visual": "Series wordmark, Spark, Visually; Part I, How Spark runs a job; the episode title.",
+     "sentences": [
+      {
+       "text": "Welcome to Spark, Visually."
+      },
+      {
+       "text": "Today: who does the work."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "S03_Parts",
+   "chapter": "The parts",
+   "segments": [
+    {
+     "id": "s3_1",
+     "visual": "The home shot builds piece by piece. First the storage shelf along the bottom, with the cast written on it as four files.",
+     "sentences": [
+      {
+       "text": "Let's build the cluster, piece by piece. At the bottom: storage. Our cast is written there as 4 files.",
+       "say": "Let's build the cluster, piece by piece. At the bottom: storage. Our cast is written there as four files."
+      }
+     ]
+    },
+    {
+     "id": "s3_2",
+     "visual": "Four executor benches rise above the shelf, each with two core slots. Labels name the parts once: worker (the machine), executor (the process on it), core (a slot that runs one task).",
+     "sentences": [
+      {
+       "text": "Above it, four machines, called workers. On each one runs a process called an executor."
+      },
+      {
+       "text": "Each executor has cores, and a core runs one task at a time. 4 executors with 2 cores each: 8 tasks can run at once.",
+       "say": "Each executor has cores, and a core runs one task at a time. Four executors with two cores each: eight tasks can run at once."
+      }
+     ]
+    },
+    {
+     "id": "s3_3",
+     "visual": "The network band joins the benches, and the driver desk appears above it and lights up. A small cluster-manager card starts the four executors when the driver asks.",
+     "sentences": [
+      {
+       "text": "And above them all, the driver. It holds the Spark session, plans the work and hands it out."
+      },
+      {
+       "text": "The executors were started by the cluster manager, when the driver asked for them."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "S04_Notebook",
+   "chapter": "Your notebook",
+   "segments": [
+    {
+     "id": "s4_1",
+     "visual": "The code panel slides in on the left, wired to the driver desk.",
+     "sentences": [
+      {
+       "text": "On a classic cluster, your notebook's Python runs on the driver machine itself."
+      }
+     ]
+    },
+    {
+     "id": "s4_2",
+     "visual": "Variant: the code panel detaches into a small client card, joined to the driver by a thin line. A plan travels down the line; one result travels back.",
+     "sentences": [
+      {
+       "text": "On some Databricks compute, it doesn't. With Spark Connect, the notebook is a small client: it sends each query to a driver on the cluster, and gets back only the result."
+      }
+     ]
+    },
+    {
+     "id": "s4_3",
+     "visual": "Both set-ups run the same code panel. A small card lists what Spark Connect leaves out: df.rdd and the SparkContext.",
+     "sentences": [
+      {
+       "text": "Everything in this series runs both ways. What doesn't run on Spark Connect is the old, low-level route through the SparkContext, like df.rdd. So we won't use it.",
+       "say": "Everything in this series runs both ways. What doesn't run on Spark Connect is the old, low-level route through the Spark context, like D F dot R D D. So we won't use it."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "S05_Read",
+   "chapter": "Nothing moves",
+   "segments": [
+    {
+     "id": "s5_1",
+     "visual": "Code panel, line 1 glows: df = spark.read.table(\"cast\"). Then it dims. Nothing moves anywhere on the home shot.",
+     "sentences": [
+      {
+       "text": "Now, some code. Line one reads our table."
+      },
+      {
+       "text": "It returns at once, and nothing moves. No machine touches a single row. We'll see why in episode 3.",
+       "say": "It returns at once, and nothing moves. No machine touches a single row. We'll see why in episode three."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "S06_Count",
+   "chapter": "Counting",
+   "segments": [
+    {
+     "id": "s6_1",
+     "visual": "Line 2 glows: df.count(). The driver turns the plan into four tasks, one per file, and sends them down to the benches.",
+     "sentences": [
+      {
+       "text": "Line two counts the rows."
+      },
+      {
+       "text": "The driver turns that into 4 tasks, one for each file, and sends them down to the executors.",
+       "say": "The driver turns that into four tasks, one for each file, and sends them down to the executors."
+      }
+     ]
+    },
+    {
+     "id": "s6_2",
+     "visual": "Each bench pulls its own file up from the shelf, and its chips flow up into its tray. Nothing passes through the driver.",
+     "sentences": [
+      {
+       "text": "Each executor reads its own file, straight from storage. The data never passes through the driver."
+      }
+     ]
+    },
+    {
+     "id": "s6_3",
+     "visual": "Each tray shows its count: 28, 25, 25, 25. The four numbers travel to one final task on one bench, which adds them; a single number, 103, rises to the driver.",
+     "sentences": [
+      {
+       "text": "Each task counts its own rows: 28, 25, 25 and 25.",
+       "say": "Each task counts its own rows: twenty-eight, twenty-five, twenty-five and twenty-five."
+      },
+      {
+       "text": "The 4 partial counts go to one final task, which adds them up. And just one number goes up to the driver: 103.",
+       "say": "The four partial counts go to one final task, which adds them up. And just one number goes up to the driver: a hundred and three."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "S07_Collect",
+   "chapter": "The wrong way",
+   "segments": [
+    {
+     "id": "s7_1",
+     "visual": "Line 3 glows: rows = df.collect(). Every chip flies up from the trays into the driver, and its memory gauge rises.",
+     "sentences": [
+      {
+       "text": "Line three asks for every row: collect."
+      },
+      {
+       "text": "Now all 103 patients travel up to the driver.",
+       "say": "Now all one hundred and three patients travel up to the driver."
+      }
+     ]
+    },
+    {
+     "id": "s7_2",
+     "visual": "A scale card: the cast ten thousand times over, 1,030,000 rows. Count sends up one number; collect fills the driver's gauge: 533 MB of Python objects.",
+     "sentences": [
+      {
+       "text": "For our cast, that's nothing. Now make it 10,000 times bigger: about a million rows.",
+       "say": "For our cast, that's nothing. Now make it ten thousand times bigger: about a million rows."
+      },
+      {
+       "text": "Count still sends up one number. Collect lands every row on the driver: over 500 megabytes of memory.",
+       "say": "Count still sends up one number. Collect lands every row on the driver: over five hundred megabytes of memory."
+      }
+     ]
+    },
+    {
+     "id": "s7_3",
+     "visual": "The registry again: the driver's gauge floods red. Then the shot rewinds: the chips drop back to their trays.",
+     "sentences": [
+      {
+       "text": "For a whole registry, that would swamp the driver. Rows should stay down, with the executors."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "S08_Python",
+   "chapter": "Where Python runs",
+   "segments": [
+    {
+     "id": "s8_1",
+     "visual": "The code panel's Python feeds the plan on the driver desk; the benches wear a small JVM badge.",
+     "sentences": [
+      {
+       "text": "One more surprise. The Python you write mostly just builds a plan."
+      },
+      {
+       "text": "The real work, reading, counting, adding, runs inside the executors, in Java, not Python."
+      }
+     ]
+    },
+    {
+     "id": "s8_2",
+     "visual": "Lines 4 and 5 glow: a Python function, flip, summed in a select. Beside each bench a small Python worker appears, and batches of chips shuttle out to it and back. The plan shows ArrowEvalPython.",
+     "sentences": [
+      {
+       "text": "Unless you write your own Python function, a UDF. Then each executor starts Python workers beside it, and ships the rows out to them in batches, and back.",
+       "say": "Unless you write your own Python function, a U D F. Then each executor starts Python workers beside it, and ships the rows out to them in batches, and back."
+      },
+      {
+       "text": "That takes time, and Spark can't see inside your function."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "S09_Recap",
+   "chapter": "Recap",
+   "segments": [
+    {
+     "id": "s9_1",
+     "visual": "Three recap cards: the driver plans; the executors work; rows stay down.",
+     "sentences": [
+      {
+       "text": "Let's gather it up."
+      },
+      {
+       "text": "The driver plans the work and hands out tasks."
+      },
+      {
+       "text": "The executors read the data, and do the work."
+      },
+      {
+       "text": "And rows stay down, unless you ask for them."
+      }
+     ]
+    },
+    {
+     "id": "s9_2",
+     "visual": "The home shot during the count: four of the eight core slots lit, four dark. Next episode title: Piles of records.",
+     "sentences": [
+      {
+       "text": "One loose end: our count read the table with 4 tasks, but we have 8 cores.",
+       "say": "One loose end: our count read the table with four tasks, but we have eight cores."
+      },
+      {
+       "text": "Why only four? Next time: piles of records."
+      }
+     ]
+    },
+    {
+     "id": "s9_3",
+     "visual": "Series end card with the next episode title.",
+     "sentences": [
+      {
+       "text": "This has been Spark, Visually. Thanks for watching the cluster with us."
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

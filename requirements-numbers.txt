@@ -1,0 +1,2 @@
+# Every episode's numbers file runs on this engine (Spark Connect included). Java 21 is needed beside it.
+pyspark[connect]==4.3.0

@@ -1,0 +1,50 @@
+{
+ "module": "M5 · Everyone sends to everyone",
+ "question": "What happens when rows with the same key sit on different machines?",
+ "objective": "The viewer can describe both halves of a shuffle, count its blocks, explain why it costs serialisation, disk, network and a wall, and show how partial aggregation shrinks it.",
+ "core_concept": "A shuffle re-deals the whole table by key. Every map task writes one bin per destination to its local disk; every reduce task fetches its bin from every map task.",
+ "focus": "the hash and its remainder, bins written to local disk, the wall, fetching only bins that hold rows, partial aggregation, `collect_list`, shuffle bytes and their fixed overhead, the number of reducers and adaptive coalescing",
+ "sources": "from Spark's own plans, event log and hash function",
+ "misconceptions": [
+  "Shuffle data goes straight over the network. (It is written to local disk first, then fetched.)",
+  "`groupBy` moves every row. (Not when the partial results are small.)",
+  "Each key gets its own reduce partition. (Many keys share one, and some partitions get none.)",
+  "More shuffle partitions are always better. (Each one is a task with a fixed cost and a small file.)"
+ ],
+ "earlier_episodes": [
+  "Episode 1, Who does the work: the driver runs the notebook's code, plans and schedules; executors read their own files from storage, never through the driver. In a count, each task counts its file's rows and the partial counts go to one final task, which adds them and sends one number (103) to the driver. collect() brings every row to the driver. DataFrame work runs inside the executors; a Python UDF starts Python workers beside each executor.",
+  "Episode 2, Piles of records: a partition, called a pile, is the rows one task processes on one core. Reads cut files into piles; data built in code starts as one pile per core; after a shuffle there are 200 piles by default, unless adaptive execution merges small ones. coalesce merges piles where they stand; repartition re-deals every row. A stage ends when its slowest task ends.",
+  "Episode 3, Nothing happens until you ask: transformations add steps to a plan and run nothing; an action runs the whole plan from storage, in one pass per pile, and every action starts again from storage unless something is cached. Its closing line: a count of the filtered rows was one action, yet Spark ran it as 2 jobs and 2 stages.",
+  "Episode 4, Cut at the walls (written after this episode, which was made first as the pilot): Spark cuts a plan into stages where rows are exchanged; one task per pile; between stages stands a wall, and nothing beyond it starts until everything before it is done; with adaptive execution one action can run as several jobs."
+ ],
+ "data": "The cast: 103 simulated patients in five clinics (Alder, Birch, Cedar, Dune, Elm), written as four Parquet files that Spark reads as four piles of 28, 25, 25 and 25 rows. Column x = 1 marks a higher-risk patient (46 of the 103); column y marks a readmission (42). The animation always shows a fixed cluster of one driver and four executors with two cores each; the numbers come from one machine in local mode. The shuffles run with 5 reduce partitions, then 3; the default of 200 appears on a settings card.",
+ "deliberate_choices": [
+  "Adaptive coalescing is switched off for the cast's shuffles, so every bin stays visible; S08 says so, and the one run with it on merges the 200 piles into a single task.",
+  "Local mode has no network, so the figures for what crosses between machines (9 bins, 79 patients) are worked out from the drawn placement (pile k on executor k, reducer r on executor r mod 4), and S06 labels its picture \"as placed on the home shot\". Every other figure comes from Spark's event log or its own hash.",
+  "A bin is the part of a map task's shuffle output bound for one reducer. Spark writes each map task's bins as one sorted file with an index; the series draws the bins.",
+  "The blueprint's scale beat on the crowd (a large simulated registry) is left out until the crowd exists.",
+  "This episode was made first, as the pilot, so it recaps the wall itself in S03.",
+  "Plain words on purpose: a pile is a partition, a wall is the boundary between stages, the cast is the example data. In the On screen notes, a chip is one record, coloured by its clinic; a tray is a pile as drawn; a bench is an executor; the driver desk is the driver; the shelf is storage."
+ ],
+ "open_questions": [
+  "Spark places reduce tasks differently on every run, so S06 labels its picture \"as placed on the home shot\", and its crossing figures follow that placement. Is the label enough?",
+  "S08: \"Normally, adaptive execution spots the empty bins and merges them into a single task.\" Is that accurate for Spark 4.3's coalescing, which merges small post-shuffle partitions toward an advisory size?",
+  "S07: \"Rows fall further than bytes, because every bin carries a small fixed overhead.\" Is the reason right, given what Spark's shuffle write metrics count?"
+ ],
+ "plan_blocks": [
+  [
+   "plans.count",
+   "`df.groupBy(\"clinic\").count()`: its plan (explain(\"formatted\"))"
+  ],
+  [
+   "plans.collect_list",
+   "`df.groupBy(\"clinic\").agg(F.collect_list(\"y\"))`: its plan (explain(\"formatted\"))"
+  ],
+  [
+   "plans.all_rows",
+   "`df.repartition(\"clinic\")`: its plan (explain(\"formatted\"))"
+  ]
+ ],
+ "omit_keys": [],
+ "stage": "after the series'\nowner approved it. The episode is already voiced and animated, so keep each fix to the words that must change."
+}

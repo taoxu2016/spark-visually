@@ -1,0 +1,48 @@
+{
+ "module": "M3 · Nothing happens until you ask",
+ "question": "Why does one line of PySpark return instantly and the next take minutes?",
+ "objective": "The viewer can sort operations into transformations and actions, explain that a DataFrame holds a plan rather than rows, see that narrow steps run as one pass, and predict that each action recomputes from storage unless something is cached.",
+ "core_concept": "A DataFrame is a recipe. Transformations add steps; an action runs the whole recipe from storage, in one pass per partition. Seeing the whole recipe first is what lets Spark optimise it.",
+ "focus": "transformations and actions, eager analysis but lazy execution, column pruning for a count, whole-stage code generation as one pass, `show()` re-reading storage, `cache()` being lazy, Parquet filter pushdown and file skipping, CSV schema inference, and a count running as two jobs with adaptive execution",
+ "sources": "from Spark's own plans, event log and results",
+ "misconceptions": [
+  "Each transformation is a pass over the data. (Narrow steps are fused into one pass.)",
+  "`cache()` stores the data now. (It is lazy too.)",
+  "A second action reuses the first one's result. (Not without a cache.)",
+  "Lazy means no work before an action. (Schema inference and some reads run early.)"
+ ],
+ "earlier_episodes": [
+  "Episode 1, Who does the work: the driver runs the notebook's code, plans and schedules; executors read their own files from storage, never through the driver. In a count, each task counts its file's rows and the partial counts go to one final task, which adds them and sends one number (103) to the driver. collect() brings every row to the driver. DataFrame work runs inside the executors; a Python UDF starts Python workers beside each executor.",
+  "Episode 2, Piles of records: a partition, called a pile, is the rows one task processes on one core. Reads cut files into piles; data built in code starts as one pile per core; after a shuffle there are 200 piles by default, unless adaptive execution merges small ones. coalesce merges piles where they stand; repartition re-deals every row. A stage ends when its slowest task ends."
+ ],
+ "data": "The cast: 103 simulated patients in five clinics (Alder, Birch, Cedar, Dune, Elm), written as four Parquet files that Spark reads as four piles of 28, 25, 25 and 25 rows. Column x = 1 marks a higher-risk patient (46 of the 103); column y marks a readmission (42). The animation always shows a fixed cluster of one driver and four executors with two cores each; the numbers come from one machine in local mode. The hook repeats the cast 10,000 times (1,030,000 rows). S06 writes the cast again sorted by risk, so two of its four files hold no higher-risk patient. S07 also writes the cast as CSV.",
+ "deliberate_choices": [
+  "The hook is told in rows read (0, 0, 0, then every row), not in time: times depend on the machine, rows read don't. The hook's wall-clock times are kept in the facts below and never said.",
+  "The count computes only what it needs: its scan reads only column x and never computes the new column. The one-pass-through-every-step beat belongs to `show()`, which needs all three steps.",
+  "Pushdown is shown on files sorted by risk, because on the cast's four mixed files every file holds higher-risk patients and a pushed filter skips nothing.",
+  "`show()` asks for 21 rows, so it reads files only until it has them: 53 rows here, from two of the four files. It still starts again from storage, which is all S05 claims.",
+  "The CSV exception is shown both ways: inferring the schema runs 2 jobs at read time; a given schema keeps the read lazy.",
+  "Plain words on purpose: a pile is a partition, a wall is the boundary between stages, the cast is the example data. In the On screen notes, a chip is one record, coloured by its clinic; a tray is a pile as drawn; a bench is an executor; the driver desk is the driver; the shelf is storage."
+ ],
+ "open_questions": [
+  "The hook's first sentence (\"a few lines of PySpark come back instantly, and then one line takes minutes\") describes a common experience, not this run: the count took 0.35 seconds here. Is it fair framing?",
+  "S06: \"Files that hold no higher-risk patients are skipped.\" Spark 4.3 skips Parquet row groups whose statistics rule them out, and here each file is one row group. Is \"files are skipped\" accurate as worded, or should it say row groups?",
+  "S04 and S05 together: a count never computes the new column, while `show()` makes one pass through filter, new column and select. Are these fair readings of the plans below?"
+ ],
+ "plan_blocks": [
+  [
+   "plans.physical",
+   "The physical plan of `hi` after line 3, before any action"
+  ],
+  [
+   "plans.count",
+   "`hi.count()`: the plan it runs (explain() before the run)"
+  ],
+  [
+   "plans.show",
+   "`hi.show()`: the plan it runs"
+  ]
+ ],
+ "omit_keys": [],
+ "stage": "after the series'\nowner approved it. The episode is already voiced and animated, so keep each fix to the words that must change."
+}

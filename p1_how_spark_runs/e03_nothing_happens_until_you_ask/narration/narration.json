@@ -1,0 +1,286 @@
+{
+ "series": "Spark, Visually",
+ "arc": "Part I · How Spark Runs a Job",
+ "episode": 3,
+ "title": "Nothing Happens Until You Ask",
+ "subtitle": "transformations and actions",
+ "name": "SparkVisually_P1_E03_NothingHappensUntilYouAsk",
+ "status": "Script approved by the owner on 26 Nov 2026; revised after the second-model review (s3_1, s5_2, s6_2, s7_2 and s8_1, and the pictures in S05 and S06; see the review doc). Voiced with am_fenrir.",
+ "voice": {
+  "engine": "kokoro-onnx v1.0",
+  "name": "am_fenrir",
+  "speed": 0.92,
+  "lang": "en-us",
+  "pause_between_sentences": 0.32,
+  "tail_pad": 0.15
+ },
+ "pronunciations": {},
+ "scenes": [
+  {
+   "id": "S01_ColdOpen",
+   "chapter": null,
+   "segments": [
+    {
+     "id": "s1_1",
+     "visual": "The code panel holds four lines; the shelf holds the cast scaled ten thousand times, about a million rows, as four files. Beside each line, a counter: rows read.",
+     "sentences": [
+      {
+       "text": "You've seen it happen: a few lines of PySpark come back instantly, and then one line takes minutes."
+      },
+      {
+       "text": "Here are four lines, run on our cast scaled up to about a million rows."
+      }
+     ]
+    },
+    {
+     "id": "s1_2",
+     "visual": "The counters fill as each line runs: 0, 0, 0, then 1,030,000 for the fourth.",
+     "sentences": [
+      {
+       "text": "The first three read nothing. Not one row."
+      },
+      {
+       "text": "The fourth reads every single row. So why do the first three read nothing?"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "S02_Title",
+   "chapter": null,
+   "segments": [
+    {
+     "id": "s2_1",
+     "visual": "Series wordmark, Spark, Visually; Part I, How Spark runs a job; the episode title.",
+     "sentences": [
+      {
+       "text": "Welcome to Spark, Visually."
+      },
+      {
+       "text": "Today: nothing happens until you ask."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "S03_Recipe",
+   "chapter": "A recipe",
+   "segments": [
+    {
+     "id": "s3_1",
+     "visual": "Back to the home shot and the cast's four files; the benches stay empty. Line 1 types; a box, filter, appears on the driver desk. Nothing moves.",
+     "sentences": [
+      {
+       "text": "Back to our 103 patients. Line one filters them down to the higher-risk patients. Or rather, it writes that down.",
+       "say": "Back to our hundred and three patients. Line one filters them down to the higher-risk patients. Or rather, it writes that down."
+      },
+      {
+       "text": "A step is added to a plan: filter. Not one row moves."
+      }
+     ]
+    },
+    {
+     "id": "s3_2",
+     "visual": "Lines 2 and 3 type; two more boxes join the chain: new column, select. The rows-read counter stays at 0.",
+     "sentences": [
+      {
+       "text": "Line two adds a column, and line three keeps just two columns. Each one adds a step."
+      },
+      {
+       "text": "Three lines, and not a single row has been read."
+      }
+     ]
+    },
+    {
+     "id": "s3_3",
+     "visual": "A card: a DataFrame is a recipe, its source and its steps.",
+     "sentences": [
+      {
+       "text": "A DataFrame isn't a table of rows. It's a recipe: where the rows come from, and the steps to follow."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "S04_Count",
+   "chapter": "One pass",
+   "segments": [
+    {
+     "id": "s4_1",
+     "visual": "Line 4 glows: hi.count(). Four tasks drop from the driver to the benches, one per file.",
+     "sentences": [
+      {
+       "text": "Line four asks a question: how many rows are left? That's an action, and an action runs the recipe."
+      },
+      {
+       "text": "The driver sends 4 tasks down, one per file.",
+       "say": "The driver sends four tasks down, one per file."
+      }
+     ]
+    },
+    {
+     "id": "s4_2",
+     "visual": "Each bench reads its file; its chips pass a filter gate as they arrive, in one stream, and the chips without a risk ring drop away. The new-column and select boxes stay dark; only the x column leaves the shelf.",
+     "sentences": [
+      {
+       "text": "Each task reads its file and filters the rows as they arrive, in a single pass."
+      },
+      {
+       "text": "And the new column? A count doesn't need it, so Spark never computes it. It even reads just the one column the filter needs."
+      }
+     ]
+    },
+    {
+     "id": "s4_3",
+     "visual": "46 chips remain; four partial counts go to one final task; 46 rises to the driver.",
+     "sentences": [
+      {
+       "text": "46 higher-risk patients make it through, and one number goes up to the driver: 46.",
+       "say": "Forty-six higher-risk patients make it through, and one number goes up to the driver: forty-six."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "S05_Again",
+   "chapter": "Again",
+   "segments": [
+    {
+     "id": "s5_1",
+     "visual": "The trays are empty again. Line 5 glows: hi.show(). One task reads the first file, then a second task the next, and it stops there: show() needs only 21 rows. This time the chips pass all three steps in one stream: the filter, the new column stamped on, the risk ring dropped by select. Rows print in the code panel.",
+     "sentences": [
+      {
+       "text": "Line five asks to see the rows. Another action, so the recipe runs again, from the files."
+      },
+      {
+       "text": "This time it needs every step, and it still makes one pass: filter, add the column, keep two."
+      }
+     ]
+    },
+    {
+     "id": "s5_2",
+     "visual": "A card: normally, every action starts from storage; keeping a result is a promise for Episode 10.",
+     "sentences": [
+      {
+       "text": "Spark didn't keep the count's work. Normally, every action starts again from storage, unless you ask Spark to keep a result."
+      },
+      {
+       "text": "And even that request waits for an action. That's episode 10.",
+       "say": "And even that request waits for an action. That's episode ten."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "S06_WhyWait",
+   "chapter": "Why wait?",
+   "segments": [
+    {
+     "id": "s6_1",
+     "visual": "The whole chain on the driver desk lights at once.",
+     "sentences": [
+      {
+       "text": "So why be lazy? Because when the action arrives, Spark sees the whole recipe at once, and can plan it."
+      },
+      {
+       "text": "Here's our cast again, written with its files sorted by risk."
+      }
+     ]
+    },
+    {
+     "id": "s6_2",
+     "visual": "A copy of the filter box slides down into the read; the filter stays on the desk. All four tasks run: the two files holding no higher-risk patients grey out and are skipped, and their tasks read nothing; a counter: rows read, 53 instead of 103.",
+     "sentences": [
+      {
+       "text": "Spark pushes the filter into the read itself. Files that hold no higher-risk patients are skipped, and it reads 53 rows instead of 103.",
+       "say": "Spark pushes the filter into the read itself. Files that hold no higher-risk patients are skipped, and it reads fifty-three rows instead of a hundred and three."
+      },
+      {
+       "text": "Episode 6 shows how.",
+       "say": "Episode six shows how."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "S07_Kinds",
+   "chapter": "Two kinds of line",
+   "segments": [
+    {
+     "id": "s7_1",
+     "visual": "A sorting card: transformations (filter, withColumn, select) hand back a DataFrame; actions (count, show, collect, write) hand back a number, rows, or files.",
+     "sentences": [
+      {
+       "text": "So, two kinds of line. A transformation hands back a new DataFrame: a longer recipe, and no work."
+      },
+      {
+       "text": "An action hands back a result: a number, rows on screen or in your hands, or files written. Actions do the work."
+      }
+     ]
+    },
+    {
+     "id": "s7_2",
+     "visual": "A CSV file on the shelf: with inferSchema, two jobs run to look at the data; with a schema given, none. Beneath: reading Parquet or JSON by path runs 1 job, for the schema; over Spark Connect these jobs wait until the schema is first needed.",
+     "sentences": [
+      {
+       "text": "A common exception: read a CSV file and ask Spark to guess its column types, and it runs 2 jobs, to look at the data.",
+       "say": "A common exception: read a CSV file and ask Spark to guess its column types, and it runs two jobs, to look at the data."
+      },
+      {
+       "text": "Give it the schema, and the read is lazy again."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "S08_Recap",
+   "chapter": "Recap",
+   "segments": [
+    {
+     "id": "s8_1",
+     "visual": "Three recap cards: transformations write the recipe; actions run it, one pass per pile; normally, every action starts from storage.",
+     "sentences": [
+      {
+       "text": "Let's gather it up."
+      },
+      {
+       "text": "Transformations write the recipe. Actions run it, in one pass over each pile."
+      },
+      {
+       "text": "And normally, every action starts again from storage."
+      }
+     ]
+    },
+    {
+     "id": "s8_2",
+     "visual": "The count's job and stage tally: 2 jobs, 2 stages. Next episode title: Cut at the walls.",
+     "sentences": [
+      {
+       "text": "One loose end: our count was one action, yet Spark ran it as 2 jobs and 2 stages.",
+       "say": "One loose end: our count was one action, yet Spark ran it as two jobs and two stages."
+      },
+      {
+       "text": "How does Spark cut up the work? Next time: cut at the walls."
+      }
+     ]
+    },
+    {
+     "id": "s8_3",
+     "visual": "Series end card with the next episode title.",
+     "sentences": [
+      {
+       "text": "This has been Spark, Visually. Thanks for watching the cluster with us."
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

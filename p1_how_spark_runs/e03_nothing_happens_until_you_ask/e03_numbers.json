@@ -1,0 +1,325 @@
+{
+ "series": "Spark, Visually",
+ "part": "I · How Spark runs a job",
+ "episode": 3,
+ "title": "Nothing Happens Until You Ask",
+ "engine": {
+  "spark": "4.3.0",
+  "master": "local[8]",
+  "cpus": 1,
+  "settings": {
+   "spark.sql.adaptive.enabled": "true",
+   "spark.sql.parquet.filterPushdown": "true",
+   "spark.sql.codegen.wholeStage": "true"
+  },
+  "note": "local mode: exact plans, jobs, tasks and rows; the hook's times are wall-clock on this machine"
+ },
+ "code_on_screen": [
+  "hi = df.filter(F.col(\"x\") == 1)",
+  "hi = hi.withColumn(\"readmitted\", F.col(\"y\") == 1)",
+  "hi = hi.select(\"clinic\", \"readmitted\")",
+  "hi.count()",
+  "hi.show()"
+ ],
+ "cast": {
+  "patients": 103,
+  "higher_risk": 46,
+  "seed": 2026
+ },
+ "plans": {
+  "analyzed_after_each_line": [
+   [
+    "Filter",
+    "Relation"
+   ],
+   [
+    "Project",
+    "Filter",
+    "Relation"
+   ],
+   [
+    "Project",
+    "Project",
+    "Filter",
+    "Relation"
+   ]
+  ],
+  "optimized": [
+   "Project",
+   "Filter",
+   "Relation"
+  ],
+  "physical": "== Physical Plan ==\n*(1) Project [clinic#5, (y#7 = 1) AS readmitted#19]\n+- *(1) Filter (isnotnull(x#6) AND (x#6 = 1))\n   +- *(1) ColumnarToRow\n      +- FileScan parquet [clinic#5,x#6,y#7] Batched: true, DataFilters: [isnotnull(x#6), (x#6 = 1)], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/tmp/sv_e03/cast], PartitionFilters: [], PushedFilters: [IsNotNull(x), EqualTo(x,1)], ReadSchema: struct<clinic:string,x:int,y:int>",
+  "count": "== Physical Plan ==\nAdaptiveSparkPlan isFinalPlan=false\n+- HashAggregate(keys=[], functions=[count(1)])\n   +- Exchange SinglePartition, ENSURE_REQUIREMENTS, [plan_id=97]\n      +- HashAggregate(keys=[], functions=[partial_count(1)])\n         +- Project\n            +- Filter (isnotnull(x#6) AND (x#6 = 1))\n               +- FileScan parquet [x#6] Batched: true, DataFilters: [isnotnull(x#6), (x#6 = 1)], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/tmp/sv_e03/cast], PartitionFilters: [], PushedFilters: [IsNotNull(x), EqualTo(x,1)], ReadSchema: struct<x:int>",
+  "show": "== Physical Plan ==\nCollectLimit 21\n+- *(1) Project [clinic#5, (y#7 = 1) AS readmitted#19]\n   +- *(1) Filter (isnotnull(x#6) AND (x#6 = 1))\n      +- *(1) ColumnarToRow\n         +- FileScan parquet [clinic#5,x#6,y#7] Batched: true, DataFilters: [isnotnull(x#6), (x#6 = 1)], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/tmp/sv_e03/cast], PartitionFilters: [], PushedFilters: [IsNotNull(x), EqualTo(x,1)], ReadSchema: struct<clinic:string,x:int,y:int>",
+  "count_reads": "x:int"
+ },
+ "count": {
+  "result": 46,
+  "jobs": 2,
+  "stages": 2,
+  "tasks": 4,
+  "rows_read_per_task": [
+   28,
+   25,
+   25,
+   25
+  ]
+ },
+ "show": {
+  "jobs": 2,
+  "rows_read": 53,
+  "printed": "+------+----------+\n|clinic|readmitted|\n+------+----------+\n| Alder|      true|\n|  Dune|      true|\n| Birch|     false|\n| Birch|      true|\n| Cedar|     false|\n| Birch|     false|\n| Cedar|      true|\n| Cedar|      true|\n| Cedar|      true|\n| Birch|     false|\n| Cedar|      true|\n| Cedar|     false|\n| Cedar|     false|\n| Alder|      true|\n| Birch|      true|\n| Alder|     false|\n| Birch|     false|\n| Birch|     false|\n| Birch|     false|\n| Birch|      true|\n+------+----------+\nonly showing top 20 rows\n"
+ },
+ "hook": {
+  "rows": 1030000,
+  "scale": 10000,
+  "rows_read_per_line": [
+   0,
+   0,
+   0,
+   1030000
+  ],
+  "seconds_per_line": [
+   0.0214,
+   0.0173,
+   0.0147,
+   0.4945
+  ],
+  "ms_lines_1_3": [
+   21.4,
+   17.3,
+   14.7
+  ],
+  "seconds_line_4": 0.49
+ },
+ "pushdown": {
+  "pushed_filters": "IsNotNull(x), EqualTo(x,1)",
+  "rows_read_without": 103,
+  "rows_read_with": 53,
+  "higher_risk_per_file": [
+   0,
+   0,
+   18,
+   28
+  ],
+  "sorted_files": [
+   {
+    "rows": 28,
+    "higher_risk": 28
+   },
+   {
+    "rows": 25,
+    "higher_risk": 0
+   },
+   {
+    "rows": 25,
+    "higher_risk": 18
+   },
+   {
+    "rows": 25,
+    "higher_risk": 0
+   }
+  ]
+ },
+ "kinds": {
+  "transformation": [
+   "DataFrame",
+   "DataFrame",
+   "DataFrame"
+  ],
+  "count": "int",
+  "show": "NoneType",
+  "collect": "list",
+  "write": "NoneType"
+ },
+ "trays": {
+  "0": {
+   "Alder": 9,
+   "Birch": 6,
+   "Cedar": 10,
+   "Dune": 2,
+   "Elm": 1
+  },
+  "1": {
+   "Alder": 5,
+   "Birch": 12,
+   "Cedar": 2,
+   "Dune": 3,
+   "Elm": 3
+  },
+  "2": {
+   "Alder": 8,
+   "Birch": 8,
+   "Cedar": 3,
+   "Dune": 3,
+   "Elm": 3
+  },
+  "3": {
+   "Alder": 8,
+   "Birch": 4,
+   "Cedar": 5,
+   "Dune": 4,
+   "Elm": 4
+  }
+ },
+ "csv": {
+  "jobs_with_inference": 2,
+  "jobs_with_schema": 0,
+  "parquet_by_path_jobs": 1,
+  "json_by_path_jobs": 1,
+  "connect": {
+   "jobs_after_read": 0,
+   "jobs_when_schema_needed": 2
+  }
+ },
+ "show_jobs": [
+  {
+   "tasks": 1,
+   "rows": 28
+  },
+  {
+   "tasks": 1,
+   "rows": 25
+  }
+ ],
+ "pushdown_rows_per_task": [
+  28,
+  0,
+  25,
+  0
+ ],
+ "cache_jobs": 0,
+ "checks": [
+  {
+   "name": "pinned engine: Apache Spark 4.3.0",
+   "ok": true,
+   "detail": "4.3.0"
+  },
+  {
+   "name": "the count is the cast's higher-risk patients",
+   "ok": true,
+   "detail": "46 of 103"
+  },
+  {
+   "name": "each transformation adds one step to the plan",
+   "ok": true,
+   "detail": "[['Filter', 'Relation'], ['Project', 'Filter', 'Relation'], ['Project', 'Project', 'Filter', 'Relation']]"
+  },
+  {
+   "name": "line 1 runs no job",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "line 2 runs no job",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "line 3 runs no job",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "line 4: four tasks, one per file, each reading its file once",
+   "ok": true,
+   "detail": "[28, 25, 25, 25]"
+  },
+  {
+   "name": "line 4 runs as two jobs and two stages",
+   "ok": true,
+   "detail": "2 jobs, 2 stages"
+  },
+  {
+   "name": "filter, new column and select run as one fused pass",
+   "ok": true,
+   "detail": "['1', '1']"
+  },
+  {
+   "name": "the two Projects collapse into one before it runs",
+   "ok": true,
+   "detail": "['Project', 'Project', 'Filter', 'Relation'] -> ['Project', 'Filter', 'Relation']"
+  },
+  {
+   "name": "the count never computes the new column, and reads only the column it filters on",
+   "ok": true,
+   "detail": "x:int"
+  },
+  {
+   "name": "show runs all three steps, as one fused pass",
+   "ok": true,
+   "detail": "['1', '1']"
+  },
+  {
+   "name": "line 5 runs its own job and reads the files again",
+   "ok": true,
+   "detail": "53 rows read"
+  },
+  {
+   "name": "in the hook, only the fourth line runs a job",
+   "ok": true,
+   "detail": "{1: False, 2: False, 3: False, 4: True}"
+  },
+  {
+   "name": "the hook's count reads every row",
+   "ok": true,
+   "detail": "1,030,000"
+  },
+  {
+   "name": "the count takes longer than any of the transformations (times are kept, not said)",
+   "ok": true,
+   "detail": "[21.4, 17.3, 14.7, 494.5] ms"
+  },
+  {
+   "name": "the pushed filter is in the scan",
+   "ok": true,
+   "detail": "IsNotNull(x), EqualTo(x,1)"
+  },
+  {
+   "name": "with the files sorted by risk, the pushed filter skips files",
+   "ok": true,
+   "detail": "53 rows read instead of 103"
+  },
+  {
+   "name": "transformations hand back a DataFrame; count a number; show nothing (it prints)",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "reading Parquet or JSON by path runs one job each, to learn the schema",
+   "ok": true,
+   "detail": "parquet 1, json 1"
+  },
+  {
+   "name": "over Spark Connect the CSV read runs no job, and the inference jobs run when the schema is first needed",
+   "ok": true,
+   "detail": "{'before': 0, 'after_read': 0, 'after_columns': 2}"
+  },
+  {
+   "name": "show() reads one file at a time, in growing batches: two jobs of one task",
+   "ok": true,
+   "detail": "[{'tasks': 1, 'rows': 28}, {'tasks': 1, 'rows': 25}]"
+  },
+  {
+   "name": "with pushdown all four tasks still run; the files with no higher-risk patient give them nothing to read",
+   "ok": true,
+   "detail": "[28, 0, 25, 0]"
+  },
+  {
+   "name": "reading CSV with schema inference runs jobs at read time",
+   "ok": true,
+   "detail": "2 jobs"
+  },
+  {
+   "name": "reading CSV with a schema runs no job",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "cache() runs no job by itself",
+   "ok": true,
+   "detail": ""
+  }
+ ]
+}

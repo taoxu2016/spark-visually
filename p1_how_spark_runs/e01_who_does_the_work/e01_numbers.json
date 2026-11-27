@@ -1,0 +1,267 @@
+{
+ "series": "Spark, Visually",
+ "part": "I · How Spark runs a job",
+ "episode": 1,
+ "title": "Who Does the Work",
+ "engine": {
+  "spark": "4.3.0",
+  "master": "local[8]",
+  "connect_master": "local[4]",
+  "settings": {
+   "spark.sql.adaptive.enabled": "true",
+   "spark.sql.files.maxPartitionBytes": "134217728b",
+   "spark.sql.files.openCostInBytes": "4194304b",
+   "spark.sql.autoBroadcastJoinThreshold": "10485760b",
+   "spark.sql.execution.pythonUDF.arrow.enabled": "true"
+  },
+  "note": "local mode: exact tasks, rows and bytes; no network"
+ },
+ "code_on_screen": [
+  "df = spark.read.table(\"cast\")",
+  "df.count()",
+  "rows = df.collect()",
+  "flip = F.udf(lambda y: 1 - y, \"int\")",
+  "df.select(F.sum(flip(\"y\"))).collect()"
+ ],
+ "cast": {
+  "patients": 103,
+  "readmitted": 42,
+  "files": 4,
+  "seed": 2026
+ },
+ "trays": {
+  "0": {
+   "Alder": 9,
+   "Birch": 6,
+   "Cedar": 10,
+   "Dune": 2,
+   "Elm": 1
+  },
+  "1": {
+   "Alder": 5,
+   "Birch": 12,
+   "Cedar": 2,
+   "Dune": 3,
+   "Elm": 3
+  },
+  "2": {
+   "Alder": 8,
+   "Birch": 8,
+   "Cedar": 3,
+   "Dune": 3,
+   "Elm": 3
+  },
+  "3": {
+   "Alder": 8,
+   "Birch": 4,
+   "Cedar": 5,
+   "Dune": 4,
+   "Elm": 4
+  }
+ },
+ "tray_sizes": [
+  28,
+  25,
+  25,
+  25
+ ],
+ "slots": 8,
+ "count": {
+  "result": 103,
+  "jobs": 2,
+  "tasks": 4,
+  "rows_per_task": [
+   28,
+   25,
+   25,
+   25
+  ],
+  "partials_written": 4,
+  "final_tasks": 1,
+  "final_task_reads": 4
+ },
+ "collect": {
+  "rows": 103,
+  "tasks": 4
+ },
+ "bytes_to_driver": {
+  "cast": {
+   "collect_python_bytes": 56104,
+   "count_bytes_to_driver": 12690,
+   "collect_bytes_to_driver": 8896
+  },
+  "scaled": {
+   "factor": 10000,
+   "rows": 1030000,
+   "collect_python_bytes": 533420943,
+   "count_bytes_to_driver": 27202,
+   "collect_bytes_to_driver": 6473488,
+   "count_tasks": 13,
+   "collect_tasks": 12,
+   "collect_python_megabytes": 533
+  }
+ },
+ "udf": {
+  "result": 61,
+  "pruned_in_a_count": true,
+  "runs_in_line5": true,
+  "plan_node": "ArrowEvalPython",
+  "tasks": 4,
+  "arrow": "true"
+ },
+ "connect": {
+  "mode": "pyspark.sql.connect.session",
+  "count": 103,
+  "collect_rows": 103,
+  "udf_sum": 61,
+  "rdd": "PySparkNotImplementedError: [NOT_IMPLEMENTED] rdd is not implemented.",
+  "sparkContext": "PySparkAttributeError: [JVM_ATTRIBUTE_NOT_SUPPORTED] Attribute `sparkContext` is not supported in Spark Connect as it depends on the JVM."
+ },
+ "plans": {
+  "count": "== Physical Plan ==\nAdaptiveSparkPlan (5)\n+- HashAggregate (4)\n   +- Exchange (3)\n      +- HashAggregate (2)\n         +- Scan parquet  (1)\n\n\n(1) Scan parquet \nOutput: []\nBatched: true\nLocation: InMemoryFileIndex [file:/tmp/sv_e01/cast]\nReadSchema: struct<>\n\n(2) HashAggregate\nInput: []\nKeys: []\nFunctions [1]: [partial_count(1)]\nAggregate Attributes [1]: [count#55L]\nResults [1]: [count#56L]\n\n(3) Exchange\nInput [1]: [count#56L]\nArguments: SinglePartition, ENSURE_REQUIREMENTS, [plan_id=251]\n\n(4) HashAggregate\nInput [1]: [count#56L]\nKeys: []\nFunctions [1]: [count(1)]\nAggregate Attributes [1]: [count(1)#54L]\nResults [1]: [count(1)#54L AS count#49L]\n\n(5) AdaptiveSparkPlan\nOutput [1]: [count#49L]\nArguments: isFinalPlan=false",
+  "udf": "== Physical Plan ==\nAdaptiveSparkPlan (7)\n+- HashAggregate (6)\n   +- Exchange (5)\n      +- HashAggregate (4)\n         +- Project (3)\n            +- ArrowEvalPython (2)\n               +- Scan parquet  (1)\n\n\n(1) Scan parquet \nOutput [1]: [y#7]\nBatched: true\nLocation: InMemoryFileIndex [file:/tmp/sv_e01/cast]\nReadSchema: struct<y:int>\n\n(2) ArrowEvalPython\nInput [1]: [y#7]\nArguments: [<lambda>(y#7)#57], [pythonUDF0#60], 101\n\n(3) Project\nOutput [1]: [pythonUDF0#60]\nInput [2]: [y#7, pythonUDF0#60]\n\n(4) HashAggregate\nInput [1]: [pythonUDF0#60]\nKeys: []\nFunctions [1]: [partial_sum(pythonUDF0#60)]\nAggregate Attributes [1]: [sum#61L]\nResults [1]: [sum#62L]\n\n(5) Exchange\nInput [1]: [sum#62L]\nArguments: SinglePartition, ENSURE_REQUIREMENTS, [plan_id=272]\n\n(6) HashAggregate\nInput [1]: [sum#62L]\nKeys: []\nFunctions [1]: [sum(pythonUDF0#60)]\nAggregate Attributes [1]: [sum(pythonUDF0#60)#58L]\nResults [1]: [sum(pythonUDF0#60)#58L AS sum(<lambda>(y))#59L]\n\n(7) AdaptiveSparkPlan\nOutput [1]: [sum(<lambda>(y))#59L]\nArguments: isFinalPlan=false",
+  "collect": "== Physical Plan ==\n* ColumnarToRow (2)\n+- Scan parquet  (1)\n\n\n(1) Scan parquet \nOutput [4]: [patient#4, clinic#5, x#6, y#7]\nBatched: true\nLocation: InMemoryFileIndex [file:/tmp/sv_e01/cast]\nReadSchema: struct<patient:int,clinic:string,x:int,y:int>\n\n(2) ColumnarToRow [codegen id : 1]\nInput [4]: [patient#4, clinic#5, x#6, y#7]"
+ },
+ "checks": [
+  {
+   "name": "pinned engine: Apache Spark 4.3.0",
+   "ok": true,
+   "detail": "4.3.0"
+  },
+  {
+   "name": "eight task slots, as on the home shot (four executors, two cores each)",
+   "ok": true,
+   "detail": "8"
+  },
+  {
+   "name": "the cast is written as four files",
+   "ok": true,
+   "detail": "4 files"
+  },
+  {
+   "name": "the four files read as four trays holding all 103 patients",
+   "ok": true,
+   "detail": "[28, 25, 25, 25]"
+  },
+  {
+   "name": "df.count() is 103",
+   "ok": true,
+   "detail": "103"
+  },
+  {
+   "name": "collect() brings all 103 rows to the driver",
+   "ok": true,
+   "detail": "103"
+  },
+  {
+   "name": "the UDF line adds 1 - y over every patient: the patients not readmitted",
+   "ok": true,
+   "detail": "61 = 103 - 42"
+  },
+  {
+   "name": "a UDF whose value a count doesn't use never runs (so line 5 sums instead)",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "in the line on screen the UDF does run, in Python workers",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "the UDF's plan sends rows out to Python (an EvalPython node)",
+   "ok": true,
+   "detail": "ArrowEvalPython"
+  },
+  {
+   "name": "the plain count's plan has no Python in it",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "the scaled cast has 1,030,000 rows",
+   "ok": true,
+   "detail": "1030000"
+  },
+  {
+   "name": "the scaled collect brings every row into the driver's Python",
+   "ok": true,
+   "detail": "1030000"
+  },
+  {
+   "name": "reading the table runs no job",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "name": "defining the UDF runs no job",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "count: four tasks, one per file",
+   "ok": true,
+   "detail": "4"
+  },
+  {
+   "name": "count: each task reads its own tray from storage",
+   "ok": true,
+   "detail": "[28, 25, 25, 25] vs [28, 25, 25, 25]"
+  },
+  {
+   "name": "count: each task passes on one partial count",
+   "ok": true,
+   "detail": "[1, 1, 1, 1]"
+  },
+  {
+   "name": "count: one final task reads the four partial counts",
+   "ok": true,
+   "detail": "1 task(s), 4 records"
+  },
+  {
+   "name": "collect: four tasks read the same four trays",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "the UDF count reads the same four trays",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "collected rows cost about the same Python memory each, at both sizes",
+   "ok": true,
+   "detail": "545 and 518 bytes per row"
+  },
+  {
+   "name": "at scale, the collected rows take hundreds of megabytes in the driver's Python",
+   "ok": true,
+   "detail": "509 MiB"
+  },
+  {
+   "name": "Spark Connect: the same code panel gives the same count",
+   "ok": true,
+   "detail": "103"
+  },
+  {
+   "name": "Spark Connect: collect brings the same 103 rows",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "Spark Connect: the UDF line runs too",
+   "ok": true,
+   "detail": "61"
+  },
+  {
+   "name": "Spark Connect: df.rdd is not available",
+   "ok": true,
+   "detail": "PySparkNotImplementedError: [NOT_IMPLEMENTED] rdd is not implemented."
+  },
+  {
+   "name": "Spark Connect: the session is a client (no SparkContext)",
+   "ok": true,
+   "detail": "PySparkAttributeError: [JVM_ATTRIBUTE_NOT_SUPPORTED] Attribute `sparkContext` is not supported in Spark Connect as it depends on the JVM."
+  }
+ ]
+}

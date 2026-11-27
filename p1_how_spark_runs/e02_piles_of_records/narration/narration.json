@@ -1,0 +1,309 @@
+{
+ "series": "Spark, Visually",
+ "arc": "Part I · How Spark Runs a Job",
+ "episode": 2,
+ "title": "Piles of Records",
+ "subtitle": "partitions, tasks and cores",
+ "name": "SparkVisually_P1_E02_PilesOfRecords",
+ "status": "Script approved by the owner on 26 Nov 2026. Changed for accuracy afterwards: s4_3's 'about 17,000 rows' became 'tens of thousands', and the second-model review then revised s1_1, s4_3, s5_1 and s7_1 (see the review doc). Voiced with am_fenrir. Timelines from this run until e02_timings.json (eight real cores) arrives.",
+ "voice": {
+  "engine": "kokoro-onnx v1.0",
+  "name": "am_fenrir",
+  "speed": 0.92,
+  "lang": "en-us",
+  "pause_between_sentences": 0.32,
+  "tail_pad": 0.15
+ },
+ "pronunciations": {},
+ "scenes": [
+  {
+   "id": "S01_ColdOpen",
+   "chapter": null,
+   "segments": [
+    {
+     "id": "s1_1",
+     "visual": "The home shot. The cast lies on the storage shelf as a single file. A count runs: one task drops into one core slot on the first bench; the other seven slots stay dark.",
+     "sentences": [
+      {
+       "text": "Last time, our count read the table with 4 tasks on 8 cores. Here's a worse case: the same 103 patients, written as one file.",
+       "say": "Last time, our count read the table with four tasks on eight cores. Here's a worse case: the same hundred and three patients, written as one file."
+      },
+      {
+       "text": "Spark reads it with 1 task. One core works, and 7 sit idle.",
+       "say": "Spark reads it with one task. One core works, and seven sit idle."
+      }
+     ]
+    },
+    {
+     "id": "s1_2",
+     "visual": "The single tray glows; the seven idle slots pulse once.",
+     "sentences": [
+      {
+       "text": "Nothing is wrong with the data. It's how the rows are piled up."
+      },
+      {
+       "text": "Spark works pile by pile, and one file made one pile."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "S02_Title",
+   "chapter": null,
+   "segments": [
+    {
+     "id": "s2_1",
+     "visual": "Series wordmark, Spark, Visually; Part I, How Spark runs a job; the episode title.",
+     "sentences": [
+      {
+       "text": "Welcome to Spark, Visually."
+      },
+      {
+       "text": "Today: piles of records."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "S03_Piles",
+   "chapter": "One pile, one task",
+   "segments": [
+    {
+     "id": "s3_1",
+     "visual": "A tray lifts and is labelled: partition, a pile of rows. One task carries it into one core slot.",
+     "sentences": [
+      {
+       "text": "Spark calls a pile of rows a partition. Each partition is worked on by one task, on one core, from start to finish."
+      }
+     ]
+    },
+    {
+     "id": "s3_2",
+     "visual": "Code lines 1 and 2 type in; the four files become four trays, and the output table shows 28, 25, 25, 25. Four slots light; four stay dark.",
+     "sentences": [
+      {
+       "text": "Our 4 files make 4 piles. These two lines number each row's pile, and count them: 28, 25, 25 and 25.",
+       "say": "Our four files make four piles. These two lines number each row's pile, and count them: twenty-eight, twenty-five, twenty-five and twenty-five."
+      },
+      {
+       "text": "Four piles: four cores work, and four sit idle."
+      }
+     ]
+    },
+    {
+     "id": "s3_3",
+     "visual": "The rows are dealt into eight trays, two per bench, one beside each core slot. All eight slots light.",
+     "sentences": [
+      {
+       "text": "Deal the rows into eight piles, and every core gets one. All eight work at once."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "S04_Rounds",
+   "chapter": "Rounds",
+   "segments": [
+    {
+     "id": "s4_1",
+     "visual": "Thirty-two small trays stack beside the benches. The timeline replaces the storage shelf: eight lanes, one per core; bars appear in four rounds. Bars drawn from this run's real task times on one CPU, labelled so on screen (tasks running together share it); an eight-core Databricks run (e02_timings.json) will replace them.",
+     "sentences": [
+      {
+       "text": "So why not 32 piles? The eight cores take the first eight. Whenever a core finishes, it takes the next pile.",
+       "say": "So why not thirty-two piles? The eight cores take the first eight. Whenever a core finishes, it takes the next pile."
+      },
+      {
+       "text": "Thirty-two piles run in four rounds."
+      }
+     ]
+    },
+    {
+     "id": "s4_2",
+     "visual": "The timeline is named: a lane per core, a bar per task. Each bar's grey cap lights up.",
+     "sentences": [
+      {
+       "text": "This is a timeline: a lane for each core, and a bar for each task."
+      },
+      {
+       "text": "Every bar carries the same grey cap: the fixed cost of starting a task and wrapping it up."
+      }
+     ]
+    },
+    {
+     "id": "s4_3",
+     "visual": "Zoom on one bar: the cap is nearly the whole bar. A card: more than 99% fixed cost at about 3 rows a pile; at least tens of thousands of rows before the work matches it.",
+     "sentences": [
+      {
+       "text": "Our piles hold about 3 patients each, so the cap is nearly the whole bar: more than 99 percent of each task is overhead.",
+       "say": "Our piles hold about three patients each, so the cap is nearly the whole bar: more than ninety-nine percent of each task is overhead."
+      },
+      {
+       "text": "For a simple count, a pile needs at least tens of thousands of rows before its real work matches that fixed cost."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "S05_Where",
+   "chapter": "Where piles come from",
+   "segments": [
+    {
+     "id": "s5_1",
+     "visual": "The shelf returns. One big file, written in 8 MB row groups, is cut into eight pieces, one per tray; then thirty-two small files are gathered four at a time into eight trays.",
+     "sentences": [
+      {
+       "text": "So where do piles come from? When Spark reads files, it cuts big files into pieces, and packs small files together."
+      },
+      {
+       "text": "One big file of 61 megabytes, written in 8-megabyte row groups, became 8 piles, one for each core. And 32 small files became 8 piles too.",
+       "say": "One big file of sixty-one megabytes, written in eight-megabyte row groups, became eight piles, one for each core. And thirty-two small files became eight piles too."
+      },
+      {
+       "text": "A piece is never bigger than 128 megabytes, and smaller when that gives every core a piece, but never under 4 megabytes.",
+       "say": "A piece is never bigger than a hundred and twenty-eight megabytes, and smaller when that gives every core a piece, but never under four megabytes."
+      }
+     ]
+    },
+    {
+     "id": "s5_2",
+     "visual": "Two cards: data built in code, eight piles; after a shuffle, the setting's 200 piles, with the adaptive merge pointing to Episode 4, where it is shown.",
+     "sentences": [
+      {
+       "text": "Data you build in code starts as one pile per core."
+      },
+      {
+       "text": "And after a shuffle, a setting decides: 200 piles by default, unless Spark merges the small ones. That's episode 5.",
+       "say": "And after a shuffle, a setting decides: two hundred piles by default, unless Spark merges the small ones. That's episode five."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "S06_Merge",
+   "chapter": "Merge or re-deal",
+   "segments": [
+    {
+     "id": "s6_1",
+     "visual": "Code line 3 glows: df.coalesce(2). Trays merge in pairs where they stand: 28 and 25 become 53, 25 and 25 become 50. Nothing crosses the network band.",
+     "sentences": [
+      {
+       "text": "To change the number of piles, there are two tools."
+      },
+      {
+       "text": "The first, coalesce, merges piles where they stand. Ours become two piles, of 53 and 50, and not one row is re-dealt.",
+       "say": "The first, coalesce, merges piles where they stand. Ours become two piles, of fifty-three and fifty, and not one row is re-dealt."
+      }
+     ]
+    },
+    {
+     "id": "s6_2",
+     "visual": "Code line 4 glows: df.repartition(8). Every chip leaves its tray, goes through the shuffle across the network band, and lands in one of eight new trays (13, 12, 14, 13, 13, 13, 13, 12).",
+     "sentences": [
+      {
+       "text": "The second, repartition, re-deals every row. All 103 go through a shuffle into eight new piles.",
+       "say": "The second, repartition, re-deals every row. All one hundred and three go through a shuffle into eight new piles."
+      },
+      {
+       "text": "A shuffle has a real cost. We'll open one up in episode 5.",
+       "say": "A shuffle has a real cost. We'll open one up in episode five."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "S07_Uneven",
+   "chapter": "Uneven piles",
+   "segments": [
+    {
+     "id": "s7_1",
+     "visual": "The cast is rewritten as four files of 70, 11, 11 and 11 rows; four uneven trays. On the timeline, labelled with its data (the cast ten thousand times over: piles of 700,000 and 110,000 rows, every row hashed), one long bar and three short ones; three lanes go dark while the long bar runs. Bars drawn from this run's real task times on one CPU, labelled so on screen (tasks running together share it); an eight-core Databricks run (e02_timings.json) will replace them.",
+     "sentences": [
+      {
+       "text": "Piles don't have to be even. Write our cast as one big file and three small ones: piles of 70, 11, 11 and 11.",
+       "say": "Piles don't have to be even. Write our cast as one big file and three small ones: piles of seventy, eleven, eleven and eleven."
+      },
+      {
+       "text": "The big pile has over 6 times the rows. At scale, its core works on, while the others finish and wait.",
+       "say": "The big pile has over six times the rows. At scale, its core works on, while the others finish and wait."
+      }
+     ]
+    },
+    {
+     "id": "s7_2",
+     "visual": "The end of the long bar is marked: the stage ends here.",
+     "sentences": [
+      {
+       "text": "A stage ends when its last task ends. One big pile holds up the whole job. Remember that. It comes back."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "S08_Rule",
+   "chapter": "How many piles?",
+   "segments": [
+    {
+     "id": "s8_1",
+     "visual": "A rule-of-thumb card: a few piles per core, each big enough that its work dwarfs the fixed cost. Three small icons: idle cores, overhead caps, a long bar.",
+     "sentences": [
+      {
+       "text": "So how many piles? A few per core, each one big enough that its work dwarfs the fixed cost."
+      },
+      {
+       "text": "Too few, and cores sit idle. Too many tiny ones, and you pay for overhead. Uneven, and everyone waits for the biggest."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "S09_Recap",
+   "chapter": "Recap",
+   "segments": [
+    {
+     "id": "s9_1",
+     "visual": "Three recap cards: one pile, one task, one core; where piles come from; merge or re-deal.",
+     "sentences": [
+      {
+       "text": "Let's gather it up."
+      },
+      {
+       "text": "A partition is a pile of rows, and one task works on one pile, on one core."
+      },
+      {
+       "text": "Files, code and shuffles decide the piles. Coalesce merges them, and repartition re-deals them."
+      }
+     ]
+    },
+    {
+     "id": "s9_2",
+     "visual": "The code panel: lines 3 and 4 flash; a stopwatch reads zero. Next episode title: Nothing happens until you ask.",
+     "sentences": [
+      {
+       "text": "One loose end: the coalesce and repartition lines returned instantly. Nothing ran until something asked for a result."
+      },
+      {
+       "text": "So when does Spark actually do the work? Next time: nothing happens until you ask."
+      }
+     ]
+    },
+    {
+     "id": "s9_3",
+     "visual": "Series end card with the next episode title.",
+     "sentences": [
+      {
+       "text": "This has been Spark, Visually. Thanks for watching the cluster with us."
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

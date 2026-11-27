@@ -1,0 +1,6 @@
+# Voice, animation and the cut. System packages beside it: ffmpeg, cairo and pango (see .github/workflows/build-episode.yml).
+manim==0.22.1
+kokoro-onnx==0.6.1
+onnxruntime==1.31.0
+soundfile==0.14.0
+praat-parselmouth==0.4.7

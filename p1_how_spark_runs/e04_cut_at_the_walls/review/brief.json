@@ -1,0 +1,56 @@
+{
+ "module": "M4 · Cut at the walls",
+ "question": "How does one action become jobs, stages and tasks?",
+ "objective": "Given a query, the viewer can draw its plan, place a stage boundary at each shuffle, count each stage's tasks from its partitions, and find the same structure in `explain()` and the Spark UI.",
+ "core_concept": "An action submits a job. The scheduler cuts the job's plan into stages wherever rows must be exchanged. Inside a stage tasks are independent, one per partition, and every task feeding the next stage must finish before it starts.",
+ "focus": "where and why Spark cuts a plan into stages, tasks and partitions, the wall between stages, adaptive execution's extra jobs and skipped stages, `explain()` before and after a run, whole-stage code generation ids, and the stages of a join, and `explain()` over Spark Connect",
+ "misconceptions": [
+  "One action is one job. (Several jobs are common, especially with adaptive execution.)",
+  "A stage is a line of code. (Stages span lines, and one line, such as a join, can span stages.)",
+  "`*(2)` in `explain()` means stage 2. (It is a code-generation id.)",
+  "Stages always run one after another. (Independent stages, such as the two sides of a join, can run at once.)"
+ ],
+ "earlier_episodes": [
+  "Episode 1, Who does the work: the driver runs the notebook's code, plans and schedules; executors read their own files from storage, never through the driver. In a count, each task counts its file's rows and the partial counts go to one final task, which adds them and sends one number (103) to the driver. collect() brings every row to the driver.",
+  "Episode 2, Piles of records: a partition, called a pile, is the rows one task processes on one core. Reads cut files into piles; after a shuffle there are 200 piles by default, unless adaptive execution merges small ones. coalesce merges piles where they stand; repartition re-deals every row. A stage ends when its slowest task ends.",
+  "Episode 3, Nothing happens until you ask: transformations add steps to a plan and run nothing; an action runs the whole plan from storage, in one pass per pile. Its closing line, which Episode 4 answers: a count of the filtered rows was one action, yet Spark ran it as 2 jobs and 2 stages.",
+  "Episode 5, Everyone sends to everyone (made first, as the pilot, and already approved): in a shuffle, each map task writes its output into bins by destination on its executor's local disk; after the wall, each reduce task fetches its bin from every map task. Partial aggregation sends one count per clinic instead of every row."
+ ],
+ "data": "The cast: 103 simulated patients in five clinics (Alder, Birch, Cedar, Dune, Elm), written as four Parquet files that Spark reads as four piles of 28, 25, 25 and 25 rows. Column x = 1 marks a higher-risk patient (46 of the 103); column y marks a readmission. clinics is a five-row DataFrame, one row per clinic. The animation always shows a fixed cluster of one driver and four executors with two cores each; the numbers come from one machine in local mode.",
+ "deliberate_choices": [
+  "The code panel asks for `explain()` after `collect()`. With adaptive execution on, `explain()` before the run prints the starting plan (`isFinalPlan=false`), which has no `*(n)` markers; after the run it prints the plan as it ran. The screen shows that printout cropped to its final plan.",
+  "The skipped stage is shown where it arises on its own, in adaptive execution's second job; its own number, 3, explains the UI's jump from stage 2 to stage 4.",
+  "The join line carries `clinics.hint(\"merge\")`: by default Spark broadcasts the clinic table (recorded below), and the hint asks for a sort-merge join so that both sides are shuffled. The clinic table is stored as Parquet, so Spark knows its size; the narration points to Episode 8.",
+  "Adaptive execution off appears as a settings card in S07 that runs its two lines verbatim: `spark.conf.set(\"spark.sql.adaptive.enabled\", False)` and the count as a new DataFrame (a DataFrame that has already run keeps its plan).",
+  "S06 says that on Spark Connect `explain()` shows the starting plan even after the run; this was checked on a local Spark Connect server (recorded below).",
+  "A finished task frees its core; the wall holds the next stage, not the finished tasks.",
+  "Time is used only as order (stage two starts after stage one's last task), never as a duration, because the run is on a one-CPU machine.",
+  "Stage and job numbers are this run's: they count from the start of the application, and setup jobs ran first. S06 captions them so.",
+  "Plain words on purpose: a pile is a partition, a wall is the boundary between stages, the cast is the example data. In the On screen notes, a chip is one record, coloured by its clinic; a tray is a pile as drawn; a bench is an executor; the driver desk is the driver."
+ ],
+ "open_questions": [
+  "Databricks: on Photon compute the plan shows Photon's operator names and no `*(n)` markers, `spark.sql.shuffle.partitions` may be `auto`, and serverless compute has a query profile instead of the Spark UI. Would the episode mislead a viewer on such compute, and what would one caption in S06 need to say?",
+  "S09: \"a wall stands wherever one stage needs another's output.\" Is that accurate as a general rule, broadcast joins included?",
+  "S06: \"Adaptive execution counts its query stages, 0 and 1, its own way too.\" Accurate as worded for Spark 4.3?"
+ ],
+ "plan_blocks": [
+  [
+   "explain_shown",
+   "explain() after the run, as shown on screen (the code panel's line 4; the printout's Initial Plan section is cropped)"
+  ],
+  [
+   "explain_before",
+   "explain() before the run, as printed (not on screen)"
+  ],
+  [
+   "connect.explain_after_run",
+   "explain() after the run through Spark Connect, as printed (not on screen)"
+  ]
+ ],
+ "omit_keys": [
+  "final_plan",
+  "plan_operators",
+  "explain"
+ ],
+ "stage": "on draft 2. A first\nreview found ten things, and all ten were changed; check the new wording as closely as the rest."
+}

@@ -1,0 +1,39 @@
+{
+ "module": "M2 · Piles of records",
+ "question": "How does Spark split a table so many cores can work at once?",
+ "objective": "The viewer can explain a partition as the unit of parallel work, predict roughly how many partitions a read produces, read waves and idle slots on a task timeline, and say what too few, too many and uneven partitions cost.",
+ "core_concept": "A partition is a pile of rows one task processes on one core. Parallelism is the smaller of partitions and task slots. Too few partitions idle cores, too many pay a fixed cost per task, and uneven ones leave cores waiting for the biggest.",
+ "focus": "partitions and tasks, task slots and rounds, the fixed cost per task, how files become partitions (`maxPartitionBytes`, `openCostInBytes`, Parquet row groups), the default parallelism for data built in code, `spark.sql.shuffle.partitions` and adaptive coalescing, `coalesce` against `repartition`, and uneven partitions",
+ "sources": "from Spark's own event log and results, and, for the fixed cost per task, from executor CPU time in the event log of warm runs on this one-CPU machine,",
+ "misconceptions": [
+  "A partition is a file. (Large files split into several partitions; small files can share one.)",
+  "More partitions are always faster. (Past a few per core, fixed costs win.)",
+  "Partitioning is set once. (Every shuffle re-cuts it.)",
+  "`coalesce` and `repartition` are interchangeable. (One moves no rows across the network; the other moves them all.)"
+ ],
+ "earlier_episodes": [
+  "Episode 1, Who does the work: the driver runs the notebook's code, plans and schedules; executors read their own files from storage, never through the driver. In a count, each task counts its file's rows and the partial counts go to one final task, which adds them and sends one number (103) to the driver. collect() brings every row to the driver. DataFrame work runs inside the executors; a Python UDF starts Python workers beside each executor."
+ ],
+ "data": "The cast: 103 simulated patients in five clinics (Alder, Birch, Cedar, Dune, Elm), written as four Parquet files that Spark reads as four piles of 28, 25, 25 and 25 rows. Column x = 1 marks a higher-risk patient (46 of the 103); column y marks a readmission (42). The animation always shows a fixed cluster of one driver and four executors with two cores each; the numbers come from one machine in local mode. The episode also writes: the cast as one file; the cast as 32 small files; one 61 MB Parquet file of 8 million random numbers in 8 MB row groups; and the cast as one big file and three small ones (70, 11, 11 and 11 rows). The fixed cost is measured on the cast repeated 10,000 times as well as on the cast.",
+ "deliberate_choices": [
+  "Line 2 of the code panel ends with `.show()`, an action, so the pile counts on screen are Spark's own output.",
+  "S05 gives the full rule for cutting files, from the run: a piece is at most 128 MB, and smaller when that gives every core one. The 61 MB file became 8 piles, one 8 MB row group each.",
+  "Thirty-two piles hold 2 to 4 rows each, not exactly 3 or 4: `repartition` starts each input pile's round-robin deal at a random place.",
+  "The fixed cost per task is measured in executor CPU time from warm runs, because the machine has one CPU. The grey cap drawn on each timeline bar is the share of the task's CPU time not explained by per-row work.",
+  "The timelines in S04 and S07 are drawn from this run's real task start and end times, labelled on screen as from one CPU (tasks running together share it). An eight-core Databricks run will replace them; the task timings are left out of the facts below.",
+  "S04 says \"tens of thousands of rows\": warm runs on this machine put the break-even between about 31,000 and 54,000 rows (cold first runs gave about 17,000), so only the robust wording is said.",
+  "Plain words on purpose: a pile is a partition, a wall is the boundary between stages, the cast is the example data. In the On screen notes, a chip is one record, coloured by its clinic; a tray is a pile as drawn; a bench is an executor; the driver desk is the driver; the shelf is storage."
+ ],
+ "open_questions": [
+  "S05: \"A piece is never bigger than 128 megabytes, and smaller when that gives every core a piece.\" Is this a fair summary of how Spark 4.3 sizes file splits (`maxPartitionBytes`, `openCostInBytes`, total bytes per core)?",
+  "S04: \"For a simple count, a pile needs tens of thousands of rows before its real work matches that fixed cost.\" Is that reasonable, given how the fixed cost is measured (median executor CPU time per task, warm runs)?",
+  "S05: \"Data you build in code starts as one pile per core.\" Is that true as worded for `createDataFrame` from local data and for `spark.range`, in local mode and on a cluster?"
+ ],
+ "plan_blocks": [],
+ "omit_keys": [
+  "pile_of",
+  "uneven.pile_of",
+  "timelines"
+ ],
+ "stage": "after the series'\nowner approved it. The episode is already voiced and animated, so keep each fix to the words that must change."
+}

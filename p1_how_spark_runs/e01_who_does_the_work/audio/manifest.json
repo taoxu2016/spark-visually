@@ -1,0 +1,334 @@
+{
+ "s1_1": {
+  "scene": "S01_ColdOpen",
+  "file": "audio/segments/s1_1.wav",
+  "duration": 11.073,
+  "sentences": [
+   {
+    "text": "Here are our 103 patients. They fit on one laptop, with plenty of room to spare.",
+    "start": 0.0,
+    "end": 5.717
+   },
+   {
+    "text": "Now picture a national registry: every patient, every visit, for years.",
+    "start": 6.037,
+    "end": 10.923
+   }
+  ]
+ },
+ "s1_2": {
+  "scene": "S01_ColdOpen",
+  "file": "audio/segments/s1_2.wav",
+  "duration": 10.07,
+  "sentences": [
+   {
+    "text": "The laptop's memory fills, and then it overflows. One machine isn't enough.",
+    "start": 0.0,
+    "end": 4.864
+   },
+   {
+    "text": "So we spread the work across many machines. But then, which machine does what?",
+    "start": 5.184,
+    "end": 9.92
+   }
+  ]
+ },
+ "s2_1": {
+  "scene": "S02_Title",
+  "file": "audio/segments/s2_1.wav",
+  "duration": 3.499,
+  "sentences": [
+   {
+    "text": "Welcome to Spark, Visually.",
+    "start": 0.0,
+    "end": 1.664
+   },
+   {
+    "text": "Today: who does the work.",
+    "start": 1.984,
+    "end": 3.349
+   }
+  ]
+ },
+ "s3_1": {
+  "scene": "S03_Parts",
+  "file": "audio/segments/s3_1.wav",
+  "duration": 6.763,
+  "sentences": [
+   {
+    "text": "Let's build the cluster, piece by piece. At the bottom: storage. Our cast is written there as 4 files.",
+    "start": 0.0,
+    "end": 6.613
+   }
+  ]
+ },
+ "s3_2": {
+  "scene": "S03_Parts",
+  "file": "audio/segments/s3_2.wav",
+  "duration": 14.977,
+  "sentences": [
+   {
+    "text": "Above it, four machines, called workers. On each one runs a process called an executor.",
+    "start": 0.0,
+    "end": 5.611
+   },
+   {
+    "text": "Each executor has cores, and a core runs one task at a time. 4 executors with 2 cores each: 8 tasks can run at once.",
+    "start": 5.931,
+    "end": 14.827
+   }
+  ]
+ },
+ "s3_3": {
+  "scene": "S03_Parts",
+  "file": "audio/segments/s3_3.wav",
+  "duration": 10.838,
+  "sentences": [
+   {
+    "text": "And above them all, the driver. It holds the Spark session, plans the work and hands it out.",
+    "start": 0.0,
+    "end": 5.696
+   },
+   {
+    "text": "The executors were started by the cluster manager, when the driver asked for them.",
+    "start": 6.016,
+    "end": 10.688
+   }
+  ]
+ },
+ "s4_1": {
+  "scene": "S04_Notebook",
+  "file": "audio/segments/s4_1.wav",
+  "duration": 4.929,
+  "sentences": [
+   {
+    "text": "On a classic cluster, your notebook's Python runs on the driver machine itself.",
+    "start": 0.0,
+    "end": 4.779
+   }
+  ]
+ },
+ "s4_2": {
+  "scene": "S04_Notebook",
+  "file": "audio/segments/s4_2.wav",
+  "duration": 11.073,
+  "sentences": [
+   {
+    "text": "On some Databricks compute, it doesn't. With Spark Connect, the notebook is a small client: it sends each query to a driver on the cluster, and gets back only the result.",
+    "start": 0.0,
+    "end": 10.923
+   }
+  ]
+ },
+ "s4_3": {
+  "scene": "S04_Notebook",
+  "file": "audio/segments/s4_3.wav",
+  "duration": 12.31,
+  "sentences": [
+   {
+    "text": "Everything in this series runs both ways. What doesn't run on Spark Connect is the old, low-level route through the SparkContext, like df.rdd. So we won't use it.",
+    "start": 0.0,
+    "end": 12.16
+   }
+  ]
+ },
+ "s5_1": {
+  "scene": "S05_Read",
+  "file": "audio/segments/s5_1.wav",
+  "duration": 10.049,
+  "sentences": [
+   {
+    "text": "Now, some code. Line one reads our table.",
+    "start": 0.0,
+    "end": 2.624
+   },
+   {
+    "text": "It returns at once, and nothing moves. No machine touches a single row. We'll see why in episode 3.",
+    "start": 2.944,
+    "end": 9.899
+   }
+  ]
+ },
+ "s6_1": {
+  "scene": "S06_Count",
+  "file": "audio/segments/s6_1.wav",
+  "duration": 7.851,
+  "sentences": [
+   {
+    "text": "Line two counts the rows.",
+    "start": 0.0,
+    "end": 1.536
+   },
+   {
+    "text": "The driver turns that into 4 tasks, one for each file, and sends them down to the executors.",
+    "start": 1.856,
+    "end": 7.701
+   }
+  ]
+ },
+ "s6_2": {
+  "scene": "S06_Count",
+  "file": "audio/segments/s6_2.wav",
+  "duration": 6.55,
+  "sentences": [
+   {
+    "text": "Each executor reads its own file, straight from storage. The data never passes through the driver.",
+    "start": 0.0,
+    "end": 6.4
+   }
+  ]
+ },
+ "s6_3": {
+  "scene": "S06_Count",
+  "file": "audio/segments/s6_3.wav",
+  "duration": 14.187,
+  "sentences": [
+   {
+    "text": "Each task counts its own rows: 28, 25, 25 and 25.",
+    "start": 0.0,
+    "end": 5.333
+   },
+   {
+    "text": "The 4 partial counts go to one final task, which adds them up. And just one number goes up to the driver: 103.",
+    "start": 5.653,
+    "end": 14.037
+   }
+  ]
+ },
+ "s7_1": {
+  "scene": "S07_Collect",
+  "file": "audio/segments/s7_1.wav",
+  "duration": 6.529,
+  "sentences": [
+   {
+    "text": "Line three asks for every row: collect.",
+    "start": 0.0,
+    "end": 2.432
+   },
+   {
+    "text": "Now all 103 patients travel up to the driver.",
+    "start": 2.752,
+    "end": 6.379
+   }
+  ]
+ },
+ "s7_2": {
+  "scene": "S07_Collect",
+  "file": "audio/segments/s7_2.wav",
+  "duration": 13.377,
+  "sentences": [
+   {
+    "text": "For our cast, that's nothing. Now make it 10,000 times bigger: about a million rows.",
+    "start": 0.0,
+    "end": 5.611
+   },
+   {
+    "text": "Count still sends up one number. Collect lands every row on the driver: over 500 megabytes of memory.",
+    "start": 5.931,
+    "end": 13.227
+   }
+  ]
+ },
+ "s7_3": {
+  "scene": "S07_Collect",
+  "file": "audio/segments/s7_3.wav",
+  "duration": 5.825,
+  "sentences": [
+   {
+    "text": "For a whole registry, that would swamp the driver. Rows should stay down, with the executors.",
+    "start": 0.0,
+    "end": 5.675
+   }
+  ]
+ },
+ "s8_1": {
+  "scene": "S08_Python",
+  "file": "audio/segments/s8_1.wav",
+  "duration": 10.667,
+  "sentences": [
+   {
+    "text": "One more surprise. The Python you write mostly just builds a plan.",
+    "start": 0.0,
+    "end": 3.968
+   },
+   {
+    "text": "The real work, reading, counting, adding, runs inside the executors, in Java, not Python.",
+    "start": 4.288,
+    "end": 10.517
+   }
+  ]
+ },
+ "s8_2": {
+  "scene": "S08_Python",
+  "file": "audio/segments/s8_2.wav",
+  "duration": 14.166,
+  "sentences": [
+   {
+    "text": "Unless you write your own Python function, a UDF. Then each executor starts Python workers beside it, and ships the rows out to them in batches, and back.",
+    "start": 0.0,
+    "end": 10.475
+   },
+   {
+    "text": "That takes time, and Spark can't see inside your function.",
+    "start": 10.795,
+    "end": 14.016
+   }
+  ]
+ },
+ "s9_1": {
+  "scene": "S09_Recap",
+  "file": "audio/segments/s9_1.wav",
+  "duration": 9.601,
+  "sentences": [
+   {
+    "text": "Let's gather it up.",
+    "start": 0.0,
+    "end": 1.109
+   },
+   {
+    "text": "The driver plans the work and hands out tasks.",
+    "start": 1.429,
+    "end": 3.947
+   },
+   {
+    "text": "The executors read the data, and do the work.",
+    "start": 4.267,
+    "end": 6.912
+   },
+   {
+    "text": "And rows stay down, unless you ask for them.",
+    "start": 7.232,
+    "end": 9.451
+   }
+  ]
+ },
+ "s9_2": {
+  "scene": "S09_Recap",
+  "file": "audio/segments/s9_2.wav",
+  "duration": 7.915,
+  "sentences": [
+   {
+    "text": "One loose end: our count read the table with 4 tasks, but we have 8 cores.",
+    "start": 0.0,
+    "end": 4.693
+   },
+   {
+    "text": "Why only four? Next time: piles of records.",
+    "start": 5.013,
+    "end": 7.765
+   }
+  ]
+ },
+ "s9_3": {
+  "scene": "S09_Recap",
+  "file": "audio/segments/s9_3.wav",
+  "duration": 4.289,
+  "sentences": [
+   {
+    "text": "This has been Spark, Visually. Thanks for watching the cluster with us.",
+    "start": 0.0,
+    "end": 4.139
+   }
+  ]
+ }
+}

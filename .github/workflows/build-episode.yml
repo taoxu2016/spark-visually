@@ -65,7 +65,7 @@ jobs:
           TAG=review-cuts
           gh release view $TAG >/dev/null 2>&1 || gh release create $TAG --prerelease --title "Review cuts" \
             --notes "720p review cuts with captions burned in, rebuilt from main by the build workflow. Each upload replaces the episode's previous cut."
-          for f in ${{ inputs.episode }}/build/final/*; do
-            case "$f" in *softsubs*) continue ;; esac
+          for f in ${{ inputs.episode }}/build/final/SparkVisually_*; do
+            case "$f" in *softsubs*|*_narration.wav) continue ;; *.mp4|*_script.md|*.en.srt) ;; *) continue ;; esac
             gh release upload $TAG "$f" --clobber
           done

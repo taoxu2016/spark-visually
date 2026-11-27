@@ -1,4 +1,5 @@
-# Started by hand from the Actions tab: voices, renders and cuts one episode, and attaches the 720p cut to the run.
+# Started by hand from the Actions tab: voices, renders and cuts one episode, and publishes the 720p cut to the
+# "Review cuts" release. (No run artifacts: the release holds the cuts, and artifact storage can count against quotas.)
 # It uses the committed numbers (the recorded run) and never re-measures them.
 name: build episode
 on:
@@ -54,10 +55,6 @@ jobs:
       - name: Cut
         working-directory: ${{ inputs.episode }}
         run: python $MIM_REPO/tools/assemble.py . --quality 720p30
-      - uses: actions/upload-artifact@v4
-        with:
-          name: cut
-          path: ${{ inputs.episode }}/build/final/
       - name: Publish the cut to the "Review cuts" release (replaced on every build)
         env:
           GH_TOKEN: ${{ github.token }}

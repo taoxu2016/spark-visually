@@ -16,7 +16,7 @@ shares. The blueprint plans 19 modules in three parts. Every dataset is simulate
 | 5 · Everyone Sends to Everyone | Approved and reviewed; cut 4:54 (the pilot) |
 | 6 · Say What, Not How | Next |
 
-Review cuts are attached to the build runs and, once approved, to releases.
+The review cuts, built in the cloud from this repository, are on the [Review cuts](../../releases/tag/review-cuts) release.
 
 ## How an episode is made
 
@@ -51,7 +51,7 @@ Nothing needs installing.
 - **Checks** run on every push and pull request (Actions → checks): every numbers file's checks, and every script and
   review prompt rebuilt from its builder, which must change nothing.
 - **Building a cut**: Actions → build episode → Run workflow, with the episode's folder, for example
-  `p1_how_spark_runs/e04_cut_at_the_walls`. The 720p cut is attached to the run.
+  `p1_how_spark_runs/e04_cut_at_the_walls`. The 720p cut goes to the [Review cuts](../../releases/tag/review-cuts) release.
 - **Reviewing**: a reviewer reads an episode's folder directly, or pastes its `review/eNN_accuracy_review_prompt.md`.
   Its report goes in `review/eNN_review_report.md`, and the fixes come as a pull request that cites the findings.
 

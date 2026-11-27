@@ -8,6 +8,9 @@ on:
         description: "Episode folder, for example p1_how_spark_runs/e04_cut_at_the_walls"
         required: true
 
+permissions:
+  contents: write        # to publish the cut to the "Review cuts" release
+
 jobs:
   build:
     runs-on: ubuntu-24.04
@@ -55,3 +58,14 @@ jobs:
         with:
           name: cut
           path: ${{ inputs.episode }}/build/final/
+      - name: Publish the cut to the "Review cuts" release (replaced on every build)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG=review-cuts
+          gh release view $TAG >/dev/null 2>&1 || gh release create $TAG --prerelease --title "Review cuts" \
+            --notes "720p review cuts with captions burned in, rebuilt from main by the build workflow. Each upload replaces the episode's previous cut."
+          for f in ${{ inputs.episode }}/build/final/*; do
+            case "$f" in *softsubs*) continue ;; esac
+            gh release upload $TAG "$f" --clobber
+          done

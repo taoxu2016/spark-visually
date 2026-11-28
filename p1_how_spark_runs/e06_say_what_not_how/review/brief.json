@@ -1,0 +1,71 @@
+{
+ "module": "M6 · Say what, not how",
+ "question": "How does a DataFrame or SQL query become the plan Spark runs?",
+ "objective": "The viewer can follow a query from parsed to analysed, optimised and physical plan, show that DataFrame and SQL forms give the same plan, and spot column pruning, filter pushdown and the chosen aggregate in `explain(\"formatted\")`.",
+ "core_concept": "You describe the result; Catalyst chooses the steps. Because a DataFrame carries a schema and a plan, Spark can move filters, drop unused columns and pick operators, which it cannot do inside a Python function.",
+ "focus": "the plan at each phase (parsed, analysed, optimised, physical), DataFrame and SQL reaching the same plan, analysis of names and when a misspelt name fails (classic and over Spark Connect), the optimiser's rewrites (pushdown, the inferred `isnotnull`, column pruning), Parquet row-group skipping and column chunks, the split aggregate, `explain(\"formatted\")`, and a Python UDF blocking pushdown",
+ "sources": "from Spark's own plans and event log, through Spark Connect as well as a classic session, and, for the column data a query needs, from the Parquet file's own metadata (the sizes of its column chunks),",
+ "misconceptions": [
+  "SQL and DataFrames run differently. (Same optimiser, same plan.)",
+  "Spark runs steps in the order I wrote them. (It reorders whatever is safe to reorder.)",
+  "A Python UDF costs only its own work. (It blocks optimisation and moves rows to Python and back; vectorised pandas UDFs reduce that cost but do not remove it.)",
+  "`explain()` shows exactly what will run. (With adaptive execution it shows the starting plan; Episode 12.)"
+ ],
+ "earlier_episodes": [
+  "Episode 1, Who does the work: the driver runs the notebook's code, plans and schedules; executors read their own files from storage, never through the driver. In a count, each task counts its file's rows and the partial counts go to one final task, which adds them and sends one number (103) to the driver. collect() brings every row to the driver. DataFrame work runs inside the executors; a Python UDF starts Python workers beside each executor.",
+  "Episode 2, Piles of records: a partition, called a pile, is the rows one task processes on one core. Reads cut files into piles; data built in code starts as one pile per core; after a shuffle there are 200 piles by default, unless adaptive execution merges small ones. coalesce merges piles where they stand; repartition re-deals every row. A stage ends when its slowest task ends.",
+  "Episode 3, Nothing happens until you ask: transformations add steps to a plan and run nothing; an action runs the whole plan from storage, in one pass per pile, and every action starts again from storage unless something is cached. Its closing line: a count of the filtered rows was one action, yet Spark ran it as 2 jobs and 2 stages.",
+  "Episode 4, Cut at the walls (written after this episode, which was made first as the pilot): Spark cuts a plan into stages where rows are exchanged; one task per pile; between stages stands a wall, and nothing beyond it starts until everything before it is done; with adaptive execution one action can run as several jobs.",
+  "Episode 5, Everyone sends to everyone: in a shuffle, each map task writes its output into bins by destination on its executor's local disk; after the wall, each reduce task fetches its bin from every map task. Partial aggregation sends one count per clinic per pile instead of every row; at scale that cuts the bytes sharply."
+ ],
+ "data": "The cast: 103 simulated patients in five clinics (Alder, Birch, Cedar, Dune, Elm), written as four Parquet files that Spark reads as four piles of 28, 25, 25 and 25 rows. Column x = 1 marks a higher-risk patient (46 of the 103); column y marks a readmission (42). The animation always shows a fixed cluster of one driver and four executors with two cores each; the numbers come from one machine in local mode. The table is reached as `cast` (a temporary view over the cast's Parquet files). S05 and S07 also use the cast ten thousand times over (1,030,000 rows), sorted by risk and written as one Parquet file in 512 KB row groups (25 of them).",
+ "deliberate_choices": [
+  "The blueprint's crowd (a wide simulated registry) doesn't exist yet, so the storage scene uses the cast ten thousand times over, sorted by risk; \"three of twenty columns\" becomes two of four. The narration says the sizes belong to this sorted file.",
+  "The storage scene's sizes are the column data the query needs, from the file's own metadata: the column chunks of the columns in the scan's ReadSchema, in the row groups it reads. They are labelled so on screen. The reader itself fetches more on this tiny file, because it reads through a 64 KiB buffer; the event log's bytes read record that, and are kept in the facts and not said.",
+  "The SQL names its count (`AS count`) so both forms name the column alike; the plans are compared with Spark's expression ids and plan ids set aside.",
+  "The blueprint's constant-folding example is replaced by a rewrite this plan really shows: the inferred `isnotnull(x)`.",
+  "Pushdown switched off appears on a settings card (`spark.conf.set(\"spark.sql.parquet.filterPushdown\", False)`), and the reordering example on another card (`df.groupBy(\"clinic\").count().filter(F.col(\"clinic\") == \"Birch\")`); both run verbatim. The code panel prints both formatted plans and the four phases (`q1.explain(True)`).",
+  "The physical-plan scene comes before the storage scene, because handing the filter to the read happens in physical planning, not in the optimiser.",
+  "No durations: the UDF's cost is told in rows read and rows sent to Python.",
+  "Plain words on purpose: a pile is a partition, a wall is the boundary between stages, the cast is the example data. In the On screen notes, a chip is one record, coloured by its clinic; a tray is a pile as drawn; a bench is an executor; the driver desk is the driver; the shelf is storage."
+ ],
+ "open_questions": [
+  "s5_1: \"It hands the read a copy of the filter, so the read can skip what can't match, and has it read only 2 of the 4 columns. The filter still runs after the read, to be sure.\" Accurate for Spark 4.3's file sources?",
+  "s4_2: \"Write a filter on clinic after the count, and the optimiser moves it before: fewer rows to count.\" Accurate as worded?",
+  "s3_2: \"Over Spark Connect, DataFrame code waits until its plan is first needed, but a SQL string still fails at once.\" Accurate as worded?"
+ ],
+ "plan_blocks": [
+  [
+   "plans.formatted",
+   "q1.explain(\"formatted\"), before any run (the code panel's line 4; q2's is the same, ids aside)"
+  ],
+  [
+   "plans.q2_parsed",
+   "q2's parsed plan: the SQL before analysis"
+  ],
+  [
+   "plans.q1.analyzed",
+   "q1's analysed plan"
+  ],
+  [
+   "plans.q1.optimized",
+   "q1's optimised plan"
+  ],
+  [
+   "reorder.optimized",
+   "the reordering card's optimised plan"
+  ],
+  [
+   "plans.udf_physical",
+   "the UDF version's physical plan"
+  ]
+ ],
+ "omit_keys": [
+  "plans.q1.parsed",
+  "plans.q1.physical",
+  "formatted_q2",
+  "extended",
+  "reorder.analyzed"
+ ],
+ "stage": "on draft 2. A first\nreview found six things, and all six were changed; check the new wording as closely as the rest."
+}

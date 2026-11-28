@@ -1,0 +1,564 @@
+{
+ "series": "Spark, Visually",
+ "part": "I · How Spark runs a job",
+ "episode": 6,
+ "title": "Say What, Not How",
+ "engine": {
+  "spark": "4.3.0",
+  "master": "local[8]",
+  "cpus": 1,
+  "settings": {
+   "spark.sql.adaptive.enabled": "true",
+   "spark.sql.parquet.filterPushdown": "true",
+   "spark.sql.shuffle.partitions": "200"
+  },
+  "note": "local mode: exact plans, rows, bytes and row groups; no durations"
+ },
+ "code_on_screen": [
+  "q1 = df.filter(F.col(\"x\") == 1).groupBy(\"clinic\").count()",
+  "q2 = spark.sql(\"\"\"SELECT clinic, count(*) AS count",
+  "                 FROM cast WHERE x = 1 GROUP BY clinic\"\"\")",
+  "q1.explain(\"formatted\"); q2.explain(\"formatted\")",
+  "q1.explain(True)",
+  "df.filter(F.col(\"xx\") == 1)",
+  "hi = F.udf(lambda x: x == 1, \"boolean\")",
+  "df.filter(hi(\"x\")).groupBy(\"clinic\").count().collect()"
+ ],
+ "statements": [
+  [
+   0,
+   1
+  ],
+  [
+   1,
+   3
+  ],
+  [
+   3,
+   4
+  ],
+  [
+   4,
+   5
+  ],
+  [
+   5,
+   6
+  ],
+  [
+   6,
+   7
+  ],
+  [
+   7,
+   8
+  ]
+ ],
+ "card_pushdown_off": "spark.conf.set(\"spark.sql.parquet.filterPushdown\", False)",
+ "card_reorder": "df.groupBy(\"clinic\").count().filter(F.col(\"clinic\") == \"Birch\")",
+ "cast": {
+  "patients": 103,
+  "files": 4,
+  "seed": 2026,
+  "columns": 4
+ },
+ "counts": {
+  "Alder": 6,
+  "Cedar": 10,
+  "Dune": 6,
+  "Birch": 24
+ },
+ "plans": {
+  "q1": {
+   "parsed": "'Aggregate ['clinic], ['clinic, 'count(1) AS count#9]\n+- Filter (x#6 = 1)\n   +- Relation [patient#4,clinic#5,x#6,y#7] parquet\n",
+   "analyzed": "Aggregate [clinic#5], [clinic#5, count(1) AS count#9L]\n+- Filter (x#6 = 1)\n   +- Relation [patient#4,clinic#5,x#6,y#7] parquet\n",
+   "optimized": "Aggregate [clinic#5], [clinic#5, count(1) AS count#9L]\n+- Project [clinic#5]\n   +- Filter (isnotnull(x#6) AND (x#6 = 1))\n      +- Relation [patient#4,clinic#5,x#6,y#7] parquet\n",
+   "physical": "AdaptiveSparkPlan isFinalPlan=true\n+- == Final Plan ==\n   ResultQueryStage 1\n   +- *(2) HashAggregate(keys=[clinic#5], functions=[count(1)], output=[clinic#5, count#9L])\n      +- AQEShuffleRead coalesced\n         +- ShuffleQueryStage 0\n            +- Exchange hashpartitioning(clinic#5, 200), ENSURE_REQUIREMENTS, [plan_id=139]\n               +- *(1) HashAggregate(keys=[clinic#5], functions=[partial_count(1)], output=[clinic#5, count#18L])\n                  +- *(1) Project [clinic#5]\n                     +- *(1) Filter (isnotnull(x#6) AND (x#6 = 1))\n                        +- *(1) ColumnarToRow\n                           +- FileScan parquet [clinic#5,x#6] Batched: true, DataFilters: [isnotnull(x#6), (x#6 = 1)], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/tmp/sv_e06/cast], PartitionFilters: [], PushedFilters: [IsNotNull(x), EqualTo(x,1)], ReadSchema: struct<clinic:string,x:int>\n+- == Initial Plan ==\n   HashAggregate(keys=[clinic#5], functions=[count(1)], output=[clinic#5, count#9L])\n   +- Exchange hashpartitioning(clinic#5, 200), ENSURE_REQUIREMENTS, [plan_id=32]\n      +- HashAggregate(keys=[clinic#5], functions=[partial_count(1)], output=[clinic#5, count#18L])\n         +- Project [clinic#5]\n            +- Filter (isnotnull(x#6) AND (x#6 = 1))\n               +- FileScan parquet [clinic#5,x#6] Batched: true, DataFilters: [isnotnull(x#6), (x#6 = 1)], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/tmp/sv_e06/cast], PartitionFilters: [], PushedFilters: [IsNotNull(x), EqualTo(x,1)], ReadSchema: struct<clinic:string,x:int>\n"
+  },
+  "q2_parsed": "'Aggregate ['clinic], ['clinic, 'count(1) AS count#15]\n+- 'Filter ('x = 1)\n   +- 'UnresolvedRelation [cast], [], false\n",
+  "formatted": "== Physical Plan ==\nAdaptiveSparkPlan (7)\n+- HashAggregate (6)\n   +- Exchange (5)\n      +- HashAggregate (4)\n         +- Project (3)\n            +- Filter (2)\n               +- Scan parquet  (1)\n\n\n(1) Scan parquet \nOutput [2]: [clinic#5, x#6]\nBatched: true\nLocation: InMemoryFileIndex [file:/tmp/sv_e06/cast]\nPushedFilters: [IsNotNull(x), EqualTo(x,1)]\nReadSchema: struct<clinic:string,x:int>\n\n(2) Filter\nInput [2]: [clinic#5, x#6]\nCondition : (isnotnull(x#6) AND (x#6 = 1))\n\n(3) Project\nOutput [1]: [clinic#5]\nInput [2]: [clinic#5, x#6]\n\n(4) HashAggregate\nInput [1]: [clinic#5]\nKeys [1]: [clinic#5]\nFunctions [1]: [partial_count(1)]\nAggregate Attributes [1]: [count#17L]\nResults [2]: [clinic#5, count#18L]\n\n(5) Exchange\nInput [2]: [clinic#5, count#18L]\nArguments: hashpartitioning(clinic#5, 200), ENSURE_REQUIREMENTS, [plan_id=32]\n\n(6) HashAggregate\nInput [2]: [clinic#5, count#18L]\nKeys [1]: [clinic#5]\nFunctions [1]: [count(1)]\nAggregate Attributes [1]: [count(1)#14L]\nResults [2]: [clinic#5, count(1)#14L AS count#9L]\n\n(7) AdaptiveSparkPlan\nOutput [2]: [clinic#5, count#9L]\nArguments: isFinalPlan=false",
+  "udf_physical": "AdaptiveSparkPlan isFinalPlan=false\n+- HashAggregate(keys=[clinic#5], functions=[count(1)], output=[clinic#5, count#40L])\n   +- Exchange hashpartitioning(clinic#5, 200), ENSURE_REQUIREMENTS, [plan_id=283]\n      +- HashAggregate(keys=[clinic#5], functions=[partial_count(1)], output=[clinic#5, count#48L])\n         +- Project [clinic#5]\n            +- Filter pythonUDF0#46: boolean\n               +- ArrowEvalPython [<lambda>(x#6)#39], [pythonUDF0#46], 101\n                  +- FileScan parquet [clinic#5,x#6] Batched: true, DataFilters: [], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/tmp/sv_e06/cast], PartitionFilters: [], PushedFilters: [], ReadSchema: struct<clinic:string,x:int>\n"
+ },
+ "same_plan": true,
+ "read_schema": "struct<clinic:string,x:int>",
+ "pushed_filters": "IsNotNull(x), EqualTo(x,1)",
+ "formatted_nodes": [
+  "Scan parquet",
+  "Filter",
+  "Project",
+  "HashAggregate",
+  "Exchange",
+  "HashAggregate",
+  "AdaptiveSparkPlan"
+ ],
+ "misspelt": {
+  "error": "AnalysisException",
+  "unresolved_column": true
+ },
+ "connect": {
+  "dataframe_at_its_line": null,
+  "dataframe_when_columns_are_asked": "AnalysisException: UNRESOLVED_COLUMN",
+  "dataframe_at_count": "AnalysisException: UNRESOLVED_COLUMN",
+  "sql_at_its_call": "AnalysisException: UNRESOLVED_COLUMN"
+ },
+ "udf": {
+  "node": "ArrowEvalPython",
+  "pushed_filters": "",
+  "rows_to_python": 103
+ },
+ "storage": {
+  "scale": 10000,
+  "rows": 1030000,
+  "row_group_bytes": 524288,
+  "row_groups": 25,
+  "row_groups_that_may_hold_x1": 12,
+  "groups": [
+   {
+    "rows": 38976,
+    "x_min": 0,
+    "x_max": 0,
+    "chunk_bytes": {
+     "patient": 156083,
+     "clinic": 108,
+     "x": 103,
+     "y": 103
+    }
+   },
+   {
+    "rows": 38976,
+    "x_min": 0,
+    "x_max": 0,
+    "chunk_bytes": {
+     "patient": 156099,
+     "clinic": 108,
+     "x": 103,
+     "y": 103
+    }
+   },
+   {
+    "rows": 38976,
+    "x_min": 0,
+    "x_max": 0,
+    "chunk_bytes": {
+     "patient": 156081,
+     "clinic": 108,
+     "x": 103,
+     "y": 111
+    }
+   },
+   {
+    "rows": 38976,
+    "x_min": 0,
+    "x_max": 0,
+    "chunk_bytes": {
+     "patient": 156080,
+     "clinic": 108,
+     "x": 103,
+     "y": 103
+    }
+   },
+   {
+    "rows": 38976,
+    "x_min": 0,
+    "x_max": 0,
+    "chunk_bytes": {
+     "patient": 156087,
+     "clinic": 108,
+     "x": 103,
+     "y": 103
+    }
+   },
+   {
+    "rows": 38976,
+    "x_min": 0,
+    "x_max": 0,
+    "chunk_bytes": {
+     "patient": 156090,
+     "clinic": 108,
+     "x": 103,
+     "y": 103
+    }
+   },
+   {
+    "rows": 38976,
+    "x_min": 0,
+    "x_max": 0,
+    "chunk_bytes": {
+     "patient": 156095,
+     "clinic": 121,
+     "x": 103,
+     "y": 114
+    }
+   },
+   {
+    "rows": 38976,
+    "x_min": 0,
+    "x_max": 0,
+    "chunk_bytes": {
+     "patient": 156085,
+     "clinic": 121,
+     "x": 103,
+     "y": 110
+    }
+   },
+   {
+    "rows": 38976,
+    "x_min": 0,
+    "x_max": 0,
+    "chunk_bytes": {
+     "patient": 156094,
+     "clinic": 108,
+     "x": 103,
+     "y": 112
+    }
+   },
+   {
+    "rows": 38976,
+    "x_min": 0,
+    "x_max": 0,
+    "chunk_bytes": {
+     "patient": 156085,
+     "clinic": 108,
+     "x": 103,
+     "y": 103
+    }
+   },
+   {
+    "rows": 57901,
+    "x_min": 0,
+    "x_max": 0,
+    "chunk_bytes": {
+     "patient": 231871,
+     "clinic": 162,
+     "x": 142,
+     "y": 155
+    }
+   },
+   {
+    "rows": 58312,
+    "x_min": 0,
+    "x_max": 0,
+    "chunk_bytes": {
+     "patient": 233522,
+     "clinic": 159,
+     "x": 142,
+     "y": 142
+    }
+   },
+   {
+    "rows": 58372,
+    "x_min": 0,
+    "x_max": 0,
+    "chunk_bytes": {
+     "patient": 233766,
+     "clinic": 145,
+     "x": 142,
+     "y": 142
+    }
+   },
+   {
+    "rows": 39078,
+    "x_min": 0,
+    "x_max": 1,
+    "chunk_bytes": {
+     "patient": 156501,
+     "clinic": 120,
+     "x": 111,
+     "y": 111
+    }
+   },
+   {
+    "rows": 38976,
+    "x_min": 1,
+    "x_max": 1,
+    "chunk_bytes": {
+     "patient": 156082,
+     "clinic": 121,
+     "x": 103,
+     "y": 115
+    }
+   },
+   {
+    "rows": 38976,
+    "x_min": 1,
+    "x_max": 1,
+    "chunk_bytes": {
+     "patient": 156077,
+     "clinic": 108,
+     "x": 103,
+     "y": 103
+    }
+   },
+   {
+    "rows": 38976,
+    "x_min": 1,
+    "x_max": 1,
+    "chunk_bytes": {
+     "patient": 156084,
+     "clinic": 108,
+     "x": 103,
+     "y": 103
+    }
+   },
+   {
+    "rows": 38976,
+    "x_min": 1,
+    "x_max": 1,
+    "chunk_bytes": {
+     "patient": 156082,
+     "clinic": 108,
+     "x": 103,
+     "y": 103
+    }
+   },
+   {
+    "rows": 38976,
+    "x_min": 1,
+    "x_max": 1,
+    "chunk_bytes": {
+     "patient": 156091,
+     "clinic": 108,
+     "x": 103,
+     "y": 111
+    }
+   },
+   {
+    "rows": 38976,
+    "x_min": 1,
+    "x_max": 1,
+    "chunk_bytes": {
+     "patient": 156092,
+     "clinic": 108,
+     "x": 103,
+     "y": 103
+    }
+   },
+   {
+    "rows": 38976,
+    "x_min": 1,
+    "x_max": 1,
+    "chunk_bytes": {
+     "patient": 156085,
+     "clinic": 121,
+     "x": 103,
+     "y": 110
+    }
+   },
+   {
+    "rows": 38976,
+    "x_min": 1,
+    "x_max": 1,
+    "chunk_bytes": {
+     "patient": 156085,
+     "clinic": 108,
+     "x": 103,
+     "y": 103
+    }
+   },
+   {
+    "rows": 38976,
+    "x_min": 1,
+    "x_max": 1,
+    "chunk_bytes": {
+     "patient": 156097,
+     "clinic": 108,
+     "x": 103,
+     "y": 111
+    }
+   },
+   {
+    "rows": 57792,
+    "x_min": 1,
+    "x_max": 1,
+    "chunk_bytes": {
+     "patient": 231440,
+     "clinic": 160,
+     "x": 142,
+     "y": 150
+    }
+   },
+   {
+    "rows": 18001,
+    "x_min": 1,
+    "x_max": 1,
+    "chunk_bytes": {
+     "patient": 72096,
+     "clinic": 68,
+     "x": 64,
+     "y": 72
+    }
+   }
+  ],
+  "reads": {
+   "query": {
+    "rows": 465655,
+    "bytes": 767762
+   },
+   "no_pushdown": {
+    "rows": 1030000,
+    "bytes": 16148
+   },
+   "all_columns": {
+    "rows": 465655,
+    "bytes": 767762
+   },
+   "udf": {
+    "rows": 1030000,
+    "bytes": 16148
+   }
+  },
+  "columns_read": [
+   "clinic",
+   "x"
+  ],
+  "column_bytes_needed": {
+   "query": 2590,
+   "no_pushdown": 5618,
+   "all_columns": 1868697,
+   "everything": 4133267
+  },
+  "note": "column_bytes_needed come from the file's metadata; reads[...].bytes are what the reader fetched (64 KiB buffered reads), kept and not said"
+ },
+ "formatted_q2": "== Physical Plan ==\nAdaptiveSparkPlan (7)\n+- HashAggregate (6)\n   +- Exchange (5)\n      +- HashAggregate (4)\n         +- Project (3)\n            +- Filter (2)\n               +- Scan parquet  (1)\n\n\n(1) Scan parquet \nOutput [2]: [clinic#5, x#6]\nBatched: true\nLocation: InMemoryFileIndex [file:/tmp/sv_e06/cast]\nPushedFilters: [IsNotNull(x), EqualTo(x,1)]\nReadSchema: struct<clinic:string,x:int>\n\n(2) Filter\nInput [2]: [clinic#5, x#6]\nCondition : (isnotnull(x#6) AND (x#6 = 1))\n\n(3) Project\nOutput [1]: [clinic#5]\nInput [2]: [clinic#5, x#6]\n\n(4) HashAggregate\nInput [1]: [clinic#5]\nKeys [1]: [clinic#5]\nFunctions [1]: [partial_count(1)]\nAggregate Attributes [1]: [count#19L]\nResults [2]: [clinic#5, count#20L]\n\n(5) Exchange\nInput [2]: [clinic#5, count#20L]\nArguments: hashpartitioning(clinic#5, 200), ENSURE_REQUIREMENTS, [plan_id=51]\n\n(6) HashAggregate\nInput [2]: [clinic#5, count#20L]\nKeys [1]: [clinic#5]\nFunctions [1]: [count(1)]\nAggregate Attributes [1]: [count(1)#16L]\nResults [2]: [clinic#5, count(1)#16L AS count#15L]\n\n(7) AdaptiveSparkPlan\nOutput [2]: [clinic#5, count#15L]\nArguments: isFinalPlan=false",
+ "extended": "== Parsed Logical Plan ==\n'Aggregate ['clinic], ['clinic, 'count(1) AS count#9]\n+- Filter (x#6 = 1)\n   +- Relation [patient#4,clinic#5,x#6,y#7] parquet\n\n== Analyzed Logical Plan ==\nclinic: string, count: bigint\nAggregate [clinic#5], [clinic#5, count(1) AS count#9L]\n+- Filter (x#6 = 1)\n   +- Relation [patient#4,clinic#5,x#6,y#7] parquet\n\n== Optimized Logical Plan ==\nAggregate [clinic#5], [clinic#5, count(1) AS count#9L]\n+- Project [clinic#5]\n   +- Filter (isnotnull(x#6) AND (x#6 = 1))\n      +- Relation [patient#4,clinic#5,x#6,y#7] parquet\n\n== Physical Plan ==\nAdaptiveSparkPlan isFinalPlan=false\n+- HashAggregate(keys=[clinic#5], functions=[count(1)], output=[clinic#5, count#9L])\n   +- Exchange hashpartitioning(clinic#5, 200), ENSURE_REQUIREMENTS, [plan_id=32]\n      +- HashAggregate(keys=[clinic#5], functions=[partial_count(1)], output=[clinic#5, count#18L])\n         +- Project [clinic#5]\n            +- Filter (isnotnull(x#6) AND (x#6 = 1))\n               +- FileScan parquet [clinic#5,x#6] Batched: true, DataFilters: [isnotnull(x#6), (x#6 = 1)], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/tmp/sv_e06/cast], PartitionFilters: [], PushedFilters: [IsNotNull(x), EqualTo(x,1)], ReadSchema: struct<clinic:string,x:int>\n\n",
+ "reorder": {
+  "card": "df.groupBy(\"clinic\").count().filter(F.col(\"clinic\") == \"Birch\")",
+  "analyzed": "Filter (clinic#5 = Birch)\n+- Aggregate [clinic#5], [clinic#5, count(1) AS count#31L]\n   +- Relation [patient#4,clinic#5,x#6,y#7] parquet\n",
+  "optimized": "Aggregate [clinic#5], [clinic#5, count(1) AS count#31L]\n+- Project [clinic#5]\n   +- Filter (isnotnull(clinic#5) AND (clinic#5 = Birch))\n      +- Relation [patient#4,clinic#5,x#6,y#7] parquet\n",
+  "rows": {
+   "Birch": 30
+  }
+ },
+ "checks": [
+  {
+   "name": "pinned engine: Apache Spark 4.3.0",
+   "ok": true,
+   "detail": "4.3.0"
+  },
+  {
+   "name": "the panel prints both formatted plans, and they match with ids set aside",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "explain(True) prints all four phases",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "the DataFrame and SQL forms give the same answer",
+   "ok": true,
+   "detail": "{'Alder': 6, 'Cedar': 10, 'Dune': 6, 'Birch': 24}"
+  },
+  {
+   "name": "SQL and DataFrame code reach the same optimised plan",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "and the same physical plan",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "the SQL's parsed plan names its table unresolved; analysis finds it",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "DataFrame code is analysed as each line is written: its plan already carries types and ids (x#n)",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "a misspelt column fails at analysis, on its own line, before any job",
+   "ok": true,
+   "detail": "{'error': 'AnalysisException', 'unresolved_column': True}"
+  },
+  {
+   "name": "the optimiser adds a step nobody wrote: isnotnull(x)",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "the optimised plan still has the Filter over the whole relation: pushdown and the two-column read are decided in physical planning",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "the optimiser keeps only what the query needs: a Project of clinic over the filter",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "written after the count, the filter runs before it: the optimiser moves it below the aggregate",
+   "ok": true,
+   "detail": "{'Birch': 30}"
+  },
+  {
+   "name": "the scan reads 2 of the table's 4 columns (pruning)",
+   "ok": true,
+   "detail": "struct<clinic:string,x:int>"
+  },
+  {
+   "name": "the filter is pushed into the scan",
+   "ok": true,
+   "detail": "IsNotNull(x), EqualTo(x,1)"
+  },
+  {
+   "name": "the physical plan splits the count around an Exchange: partial, then final",
+   "ok": true,
+   "detail": "['Scan parquet', 'Filter', 'Project', 'HashAggregate', 'Exchange', 'HashAggregate', 'AdaptiveSparkPlan']"
+  },
+  {
+   "name": "explain() before any action shows the starting plan",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "the UDF version gives the same answer",
+   "ok": true,
+   "detail": "{'Alder': 6, 'Cedar': 10, 'Dune': 6, 'Birch': 24}"
+  },
+  {
+   "name": "with the UDF, a Python node evaluates the filter and nothing about x is pushed down",
+   "ok": true,
+   "detail": "ArrowEvalPython; PushedFilters: []"
+  },
+  {
+   "name": "over Spark Connect, DataFrame code waits until its plan is first needed; a SQL string still fails at once",
+   "ok": true,
+   "detail": "{'dataframe_at_its_line': None, 'dataframe_when_columns_are_asked': 'AnalysisException: UNRESOLVED_COLUMN', 'dataframe_at_count': 'AnalysisException: UNRESOLVED_COLUMN', 'sql_at_its_call': 'AnalysisException: UNRESOLVED_COLUMN'}"
+  },
+  {
+   "name": "the panel's first five statements run no job: building, comparing and explaining plans moves no rows",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "the UDF line reads every patient and sends each one to Python",
+   "ok": true,
+   "detail": "{'rows': 103, 'bytes': 5224}"
+  },
+  {
+   "name": "with pushdown, only the row groups whose statistics allow x = 1 are read",
+   "ok": true,
+   "detail": "465,655 of 1,030,000"
+  },
+  {
+   "name": "without pushdown every row group is read",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "the column data the query needs is a small part of the file's",
+   "ok": true,
+   "detail": "{'query': 2590, 'no_pushdown': 5618, 'all_columns': 1868697, 'everything': 4133267}"
+  },
+  {
+   "name": "the UDF version reads every row: its filter can't be pushed down",
+   "ok": true,
+   "detail": ""
+  }
+ ]
+}

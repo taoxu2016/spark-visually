@@ -31,6 +31,13 @@ owner approved it. The episode is already voiced and animated, so keep each fix 
 3. The code on screen does what the narration says it does.
 4. Nothing contradicts what earlier episodes taught, and nothing reinforces the misconceptions this episode targets.
 5. The open questions at the end.
+6. The five problems earlier reviews of this series kept finding. Look for each directly:
+   - a setting the picture relies on that the screen doesn't show (adaptive execution, a broadcast threshold,
+     filter pushdown);
+   - a comparison or a check that sets two different queries against each other, or passes for the wrong reason;
+   - task counts that leave out a final task, or stage counts that leave out a skipped stage;
+   - a claim true of this small example but said as a rule (or the reverse);
+   - behaviour that differs over Spark Connect: when errors appear, what `explain()` shows, where the plan lives.
 
 ## How to report
 

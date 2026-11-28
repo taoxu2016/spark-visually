@@ -18,6 +18,7 @@ import json
 import os
 import re
 import shutil
+import subprocess
 import sys
 from pathlib import Path
 
@@ -45,9 +46,33 @@ WIDE = ['df.groupBy("clinic").count()', 'df.distinct()', 'df.join(clinics.hint("
 SORT_WITHIN = 'df.sortWithinPartitions("patient")'                                             # S04: no wall
 UNION_SQL = ['spark.sql("SELECT * FROM cast UNION ALL SELECT * FROM cast")',                   # S03's note: no wall
              'spark.sql("SELECT * FROM cast UNION SELECT * FROM cast")']                       # plain UNION: a wall
-REUSE = ['d = df.repartition("clinic")',                                                       # S07: one deal by clinic,
-         'd.groupBy("clinic").count()',                                                        # and two later steps
-         'd.withColumn("n", F.count("*").over(Window.partitionBy("clinic")))']                 # keyed by it
+# S07: why deal up front? A step that follows another on the same key reuses its deal with nothing dealt up front;
+# a deal pays when it is cached and reused (Episode 17's teaser). The second review's case, a finer key then a
+# coarser one, is measured too: a deal up front saves its wall but sends every row instead of partial counts.
+FOLLOW = 'df.withColumn("n", F.count("*").over(Window.partitionBy("clinic"))).groupBy("clinic").count()'
+CACHED = ['d = df.repartition("clinic").cache()', 'd.count()', 'd.groupBy("clinic").count()']
+FINER_THEN_COARSER = 'df.groupBy("clinic", "x").count().withColumn("m", F.sum("count").over(Window.partitionBy("clinic")))'
+
+# S05: explain() before and after line 5 runs, over Spark Connect (classic Spark is measured in the main run)
+CONNECT_RUN = r'''
+import contextlib, io, json, re, sys
+from pyspark.sql import SparkSession
+spark = SparkSession.builder.remote("local[4]").getOrCreate()
+ns = {"df": spark.read.parquet(sys.argv[1])}
+lines = json.loads(sys.argv[2])
+for line in lines[:3]:
+    exec(line, ns)
+def exchanges(q):
+    buf = io.StringIO()
+    with contextlib.redirect_stdout(buf):
+        q.explain()
+    return len(re.findall(r"(?<!Broadcast)Exchange (\w+\([^)]*\)|SinglePartition)", buf.getvalue()))
+before = [exchanges(ns[k]) for k in ("slow", "fast", "kept")]
+eval(lines[4], ns)
+after = [exchanges(ns[k]) for k in ("slow", "fast", "kept")]
+spark.stop()
+print("CONNECT_RESULT " + json.dumps({"before": before, "after": after}))
+'''
 
 CHECKS: list[tuple[str, bool, str]] = []
 
@@ -99,10 +124,36 @@ def main() -> int:
     wide = [card(c, f"wide{k}") for k, c in enumerate(WIDE)]
     sortw = card(SORT_WITHIN, "sortwithin")
     unions = [card(c, f"union_sql{k}") for k, c in enumerate(UNION_SQL)]
-    exec(REUSE[0], ns)
-    reuse = [{"code": c, "walls": walls(plan_of(eval(c, ns)))} for c in REUSE[1:]]
+
+    # S03's on-screen arrows: union stacks the two tables' piles; coalesce merges neighbouring piles
+    def piles(q):
+        return [r["count"] for r in tagged("piles", lambda: q.groupBy(F.spark_partition_id().alias("p")).count()
+                                            .orderBy("p").collect())]
+    pile_sizes = {"cast": piles(df), "union": piles(eval(NARROW[3], ns)), "coalesce": piles(eval(NARROW[4], ns))}
+
+    # S07: a step that follows another on the same key reuses its deal; dealing up front adds nothing here
+    follow = {"code": FOLLOW, "walls": walls(plan_of(eval(FOLLOW, ns))),
+              "walls_with_deal_up_front": walls(plan_of(eval(FOLLOW, dict(ns, df=df.repartition("clinic")))))}
+    # S07: a cached deal serves a later count with no new wall (Episode 17's teaser)
+    cached_ns = dict(ns)
+    exec(CACHED[0], cached_ns)
+    tagged("cached.deal", lambda: eval(CACHED[1], cached_ns))
+    later = eval(CACHED[2], cached_ns)
+    later_plan, later_explained = plan_of(later), io.StringIO()
+    with contextlib.redirect_stdout(later_explained):
+        later.explain()
+    tagged("cached.count", lambda: later.write.format("noop").mode("overwrite").save())
+    cached = {"lines": CACHED, "walls_above_the_cache": walls(later_plan.split("InMemoryRelation")[0]),
+              # explain() also prints the plan that built the cache: its deal, already run, shows as Exchange lines
+              "exchange_lines_in_explain": len(walls(later_explained.getvalue()))}
+    cached_ns["d"].unpersist(blocking=True)
 
     # ---- the code panel, on the cast
+    def explained(q) -> str:
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            q.explain()
+        return buf.getvalue().strip()
     for line in CODE_ON_SCREEN[:3]:
         exec(line, ns)
     printed = io.StringIO()
@@ -113,6 +164,8 @@ def main() -> int:
     results = tagged("race.cast", lambda: eval(CODE_ON_SCREEN[4], ns))
     answers = [{r["clinic"]: r["count"] for r in rows} for rows in results]
     check("all three give the same answer", answers[0] == answers[1] == answers[2], str(answers[1]))
+    # S05's caption: asked after line 5 has run, classic Spark prints the final plan above the starting plan
+    after_run = {k: explained(ns[k]) for k in ("slow", "fast", "kept")}
 
     # ---- the race, on the cast ten thousand times over (the same three lines, on the bigger table)
     big_path = WORK / "cast_scaled"
@@ -129,9 +182,21 @@ def main() -> int:
     for k in ("slow", "fast", "kept"):
         tagged(f"race.big.{k}", lambda k=k: bns[k].collect())
         tagged(f"race.cast.{k}", lambda k=k: cns[k].collect())
+    # The second review's case for dealing up front, at scale: a finer key, then a coarser one
+    noop = lambda q: q.write.format("noop").mode("overwrite").save()
+    tagged("finer.without", lambda: noop(eval(FINER_THEN_COARSER, bns)))
+    tagged("finer.with", lambda: noop(eval(FINER_THEN_COARSER, dict(bns, df=bns["df"].repartition("clinic")))))
     settings = {k: spark.conf.get(k) for k in ("spark.sql.adaptive.enabled", "spark.sql.shuffle.partitions",
-                                               "spark.sql.autoBroadcastJoinThreshold")}
+                                               "spark.sql.autoBroadcastJoinThreshold",
+                                               "spark.sql.optimizer.canChangeCachedPlanOutputPartitioning")}
     spark.stop()
+
+    # ---- S05 over Spark Connect: the code panel's lines on the same cast, explain() before and after line 5
+    r = subprocess.run([sys.executable, "-c", CONNECT_RUN, str(four), json.dumps(CODE_ON_SCREEN)],
+                       capture_output=True, text=True, timeout=600)
+    line = next((ln for ln in r.stdout.splitlines() if ln.startswith("CONNECT_RESULT ")), None)
+    assert line, f"Spark Connect run failed:\n{r.stdout[-1500:]}\n{r.stderr[-1500:]}"
+    connect = json.loads(line[len("CONNECT_RESULT "):])
 
     # ------------------------------------------------------------------------- the event log
     ev, J = parse_events(EVENTS), parse_jobs(EVENTS)
@@ -140,7 +205,7 @@ def main() -> int:
     def crossings(tag):
         """Rows and bytes written into each shuffle, in the order the walls were built."""
         out = []
-        for st in sorted(ev[tag], key=lambda s: s["stage"]):
+        for st in sorted(ev.get(tag, []), key=lambda s: s["stage"]):
             w = sum(t["write_records"] for t in st["tasks"])
             if w:
                 out.append({"rows": w, "bytes": sum(t["write_bytes"] for t in st["tasks"]), "tasks": len(st["tasks"])})
@@ -169,8 +234,18 @@ def main() -> int:
           order["rows_read_per_job"].count(PATIENTS) == 2, str(order["rows_read_per_job"]))
     check("SQL's UNION ALL stacks piles (no wall); plain UNION removes duplicates, and that is a wall",
           not unions[0]["walls"] and len(unions[1]["walls"]) >= 1, str([u["walls"] for u in unions]))
-    check("one deal by clinic serves two later steps keyed by clinic: no new wall for either",
-          all(len(r["walls"]) == 1 for r in reuse), str([r["walls"] for r in reuse]))
+    check("union stacks the two tables' piles: 4 and 4 make 8, each pile whole",
+          pile_sizes["union"] == pile_sizes["cast"] * 2, str(pile_sizes))
+    P = pile_sizes["cast"]
+    check("coalesce(2) merges neighbouring piles where they stand: piles 1 and 2, then piles 3 and 4",
+          len(P) == TRAYS == 4 and pile_sizes["coalesce"] == [P[0] + P[1], P[2] + P[3]], str(pile_sizes))
+    check("a step that follows another on the same key reuses its deal: a window over each clinic, then a count "
+          "per clinic, builds one wall, with or without a deal up front",
+          len(follow["walls"]) == 1 and len(follow["walls_with_deal_up_front"]) == 1, str(follow))
+    cached["walls_crossed_by_the_count"] = crossings("cached.count")
+    check("a cached deal by clinic serves a later count with no new wall (Episode 17's teaser)",
+          not cached["walls_above_the_cache"] and not cached["walls_crossed_by_the_count"]
+          and crossings("cached.deal")[0]["rows"] == PATIENTS, str(cached))
 
     w3 = {k: walls(p) for k, p in three.items()}
     check("slow has two walls: a round-robin deal, then the hash deal the count needs",
@@ -180,6 +255,13 @@ def main() -> int:
     check("kept has one wall: the count finds its rows already dealt by clinic",
           len(w3["kept"]) == 1 and w3["kept"][0].startswith("hashpartitioning(clinic"), str(w3["kept"]))
     check("explain() shows slow's two Exchange lines", len(walls(explain_slow)) == 2)
+    after = {k: len(walls(t)) for k, t in after_run.items()}
+    check("classic Spark, after line 5 has run: explain() prints the final plan above the starting plan, so each "
+          "wall's Exchange line appears twice (slow 4, fast 2, kept 2)",
+          after == {"slow": 4, "fast": 2, "kept": 2}
+          and all("== Final Plan ==" in t and "== Initial Plan ==" in t for t in after_run.values()), str(after))
+    check("over Spark Connect, explain() shows the starting plan before and after line 5 runs (slow 2, fast 1, kept 1)",
+          connect["before"] == connect["after"] == [2, 1, 1], str(connect))
 
     race = {size: {k: crossings(f"race.{size}.{k}") for k in ("slow", "fast", "kept")} for size in ("cast", "big")}
     for size, rows_total in (("cast", PATIENTS), ("big", PATIENTS * SCALE)):
@@ -191,6 +273,15 @@ def main() -> int:
         check(f"{size}: kept's one wall carries every row",
               len(R["kept"]) == 1 and R["kept"][0]["rows"] == rows_total, str(R["kept"]))
     B = race["big"]
+    clinics_n = len(answers[1])
+    check("at scale, partial counts are one per clinic per pile: fast's 8 piles x 5 clinics, slow's 200 x 5",
+          B["fast"][0]["rows"] == B["fast"][0]["tasks"] * clinics_n == 40
+          and B["slow"][1]["rows"] == B["slow"][1]["tasks"] * clinics_n == 1000, str((B["fast"], B["slow"][1])))
+    finer = {"code": FINER_THEN_COARSER, "without": crossings("finer.without"), "with_deal_up_front": crossings("finer.with")}
+    check("a deal up front can save a wall yet send every row: groupBy(clinic, x), then a window over clinic",
+          len(finer["without"]) == 2 and len(finer["with_deal_up_front"]) == 1
+          and finer["with_deal_up_front"][0]["rows"] == PATIENTS * SCALE
+          and sum(x["rows"] for x in finer["without"]) * 1000 < PATIENTS * SCALE, str(finer))
     total = lambda xs: sum(x["bytes"] for x in xs)
     check("at scale, fast moves the fewest bytes, then kept, then slow",
           total(B["fast"]) < total(B["kept"]) < total(B["slow"]), str({k: total(v) for k, v in B.items()}))
@@ -201,7 +292,8 @@ def main() -> int:
                    "note": "local mode: exact plans, walls, jobs, stages, rows and bytes; no durations"},
         "code_on_screen": CODE_ON_SCREEN, "cast": {"patients": PATIENTS, "files": TRAYS, "seed": SEED},
         "answers": answers[1], "narrow": narrow, "wide": wide, "sort_within": sortw, "union_sql": unions,
-        "reuse": {"lines": REUSE, "walls": [r["walls"] for r in reuse]},
+        "piles": pile_sizes, "follow": follow, "cached": cached, "finer_then_coarser": finer,
+        "explain_after_run": {"classic": {"exchange_lines": after, "slow": after_run["slow"]}, "connect": connect},
         "walls": w3, "explain_slow": explain_slow, "race": race, "scale": SCALE,
         "checks": [{"name": n, "ok": ok, "detail": d} for n, ok, d in CHECKS],
     }

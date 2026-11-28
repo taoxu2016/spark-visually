@@ -10,7 +10,8 @@
   "settings": {
    "spark.sql.adaptive.enabled": "true",
    "spark.sql.shuffle.partitions": "200",
-   "spark.sql.autoBroadcastJoinThreshold": "10485760b"
+   "spark.sql.autoBroadcastJoinThreshold": "10485760b",
+   "spark.sql.optimizer.canChangeCachedPlanOutputPartitioning": "false"
   },
   "note": "local mode: exact plans, walls, jobs, stages, rows and bytes; no durations"
  },
@@ -152,20 +153,90 @@
    "broadcasts": 0
   }
  ],
- "reuse": {
-  "lines": [
-   "d = df.repartition(\"clinic\")",
-   "d.groupBy(\"clinic\").count()",
-   "d.withColumn(\"n\", F.count(\"*\").over(Window.partitionBy(\"clinic\")))"
+ "piles": {
+  "cast": [
+   28,
+   25,
+   25,
+   25
   ],
-  "walls": [
-   [
-    "hashpartitioning(clinic#7, 200)"
-   ],
-   [
-    "hashpartitioning(clinic#7, 200)"
-   ]
+  "union": [
+   28,
+   25,
+   25,
+   25,
+   28,
+   25,
+   25,
+   25
+  ],
+  "coalesce": [
+   53,
+   50
   ]
+ },
+ "follow": {
+  "code": "df.withColumn(\"n\", F.count(\"*\").over(Window.partitionBy(\"clinic\"))).groupBy(\"clinic\").count()",
+  "walls": [
+   "hashpartitioning(clinic#7, 200)"
+  ],
+  "walls_with_deal_up_front": [
+   "hashpartitioning(clinic#7, 200)"
+  ]
+ },
+ "cached": {
+  "lines": [
+   "d = df.repartition(\"clinic\").cache()",
+   "d.count()",
+   "d.groupBy(\"clinic\").count()"
+  ],
+  "walls_above_the_cache": [],
+  "exchange_lines_in_explain": 2,
+  "walls_crossed_by_the_count": []
+ },
+ "finer_then_coarser": {
+  "code": "df.groupBy(\"clinic\", \"x\").count().withColumn(\"m\", F.sum(\"count\").over(Window.partitionBy(\"clinic\")))",
+  "without": [
+   {
+    "rows": 72,
+    "bytes": 5512,
+    "tasks": 8
+   },
+   {
+    "rows": 9,
+    "bytes": 457,
+    "tasks": 1
+   }
+  ],
+  "with_deal_up_front": [
+   {
+    "rows": 1030000,
+    "bytes": 1791304,
+    "tasks": 8
+   }
+  ]
+ },
+ "explain_after_run": {
+  "classic": {
+   "exchange_lines": {
+    "slow": 4,
+    "fast": 2,
+    "kept": 2
+   },
+   "slow": "== Physical Plan ==\nAdaptiveSparkPlan isFinalPlan=true\n+- == Final Plan ==\n   ResultQueryStage 2\n   +- *(3) HashAggregate(keys=[clinic#7], functions=[count(1)])\n      +- AQEShuffleRead coalesced\n         +- ShuffleQueryStage 1\n            +- Exchange hashpartitioning(clinic#7, 200), ENSURE_REQUIREMENTS, [plan_id=1298]\n               +- *(2) HashAggregate(keys=[clinic#7], functions=[partial_count(1)])\n                  +- ShuffleQueryStage 0\n                     +- Exchange RoundRobinPartitioning(200), REPARTITION_BY_NUM, [plan_id=1272]\n                        +- *(1) ColumnarToRow\n                           +- FileScan parquet [clinic#7] Batched: true, DataFilters: [], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/tmp/sv_e07/cast], PartitionFilters: [], PushedFilters: [], ReadSchema: struct<clinic:string>\n+- == Initial Plan ==\n   HashAggregate(keys=[clinic#7], functions=[count(1)])\n   +- Exchange hashpartitioning(clinic#7, 200), ENSURE_REQUIREMENTS, [plan_id=1225]\n      +- HashAggregate(keys=[clinic#7], functions=[partial_count(1)])\n         +- Exchange RoundRobinPartitioning(200), REPARTITION_BY_NUM, [plan_id=1221]\n            +- FileScan parquet [clinic#7] Batched: true, DataFilters: [], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/tmp/sv_e07/cast], PartitionFilters: [], PushedFilters: [], ReadSchema: struct<clinic:string>"
+  },
+  "connect": {
+   "before": [
+    2,
+    1,
+    1
+   ],
+   "after": [
+    2,
+    1,
+    1
+   ]
+  }
  },
  "walls": {
   "slow": [
@@ -179,7 +250,7 @@
    "hashpartitioning(clinic#7, 200)"
   ]
  },
- "explain_slow": "== Physical Plan ==\nAdaptiveSparkPlan isFinalPlan=false\n+- HashAggregate(keys=[clinic#7], functions=[count(1)])\n   +- Exchange hashpartitioning(clinic#7, 200), ENSURE_REQUIREMENTS, [plan_id=802]\n      +- HashAggregate(keys=[clinic#7], functions=[partial_count(1)])\n         +- Exchange RoundRobinPartitioning(200), REPARTITION_BY_NUM, [plan_id=798]\n            +- FileScan parquet [clinic#7] Batched: true, DataFilters: [], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/tmp/sv_e07/cast], PartitionFilters: [], PushedFilters: [], ReadSchema: struct<clinic:string>",
+ "explain_slow": "== Physical Plan ==\nAdaptiveSparkPlan isFinalPlan=false\n+- HashAggregate(keys=[clinic#7], functions=[count(1)])\n   +- Exchange hashpartitioning(clinic#7, 200), ENSURE_REQUIREMENTS, [plan_id=1225]\n      +- HashAggregate(keys=[clinic#7], functions=[partial_count(1)])\n         +- Exchange RoundRobinPartitioning(200), REPARTITION_BY_NUM, [plan_id=1221]\n            +- FileScan parquet [clinic#7] Batched: true, DataFilters: [], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/tmp/sv_e07/cast], PartitionFilters: [], PushedFilters: [], ReadSchema: struct<clinic:string>",
  "race": {
   "cast": {
    "slow": [
@@ -286,9 +357,24 @@
    "detail": "[[], ['hashpartitioning(patient#6, clinic#7, x#8, y#9, 200)']]"
   },
   {
-   "name": "one deal by clinic serves two later steps keyed by clinic: no new wall for either",
+   "name": "union stacks the two tables' piles: 4 and 4 make 8, each pile whole",
    "ok": true,
-   "detail": "[['hashpartitioning(clinic#7, 200)'], ['hashpartitioning(clinic#7, 200)']]"
+   "detail": "{'cast': [28, 25, 25, 25], 'union': [28, 25, 25, 25, 28, 25, 25, 25], 'coalesce': [53, 50]}"
+  },
+  {
+   "name": "coalesce(2) merges neighbouring piles where they stand: piles 1 and 2, then piles 3 and 4",
+   "ok": true,
+   "detail": "{'cast': [28, 25, 25, 25], 'union': [28, 25, 25, 25, 28, 25, 25, 25], 'coalesce': [53, 50]}"
+  },
+  {
+   "name": "a step that follows another on the same key reuses its deal: a window over each clinic, then a count per clinic, builds one wall, with or without a deal up front",
+   "ok": true,
+   "detail": "{'code': 'df.withColumn(\"n\", F.count(\"*\").over(Window.partitionBy(\"clinic\"))).groupBy(\"clinic\").count()', 'walls': ['hashpartitioning(clinic#7, 200)'], 'walls_with_deal_up_front': ['hashpartitioning(clinic#7, 200)']}"
+  },
+  {
+   "name": "a cached deal by clinic serves a later count with no new wall (Episode 17's teaser)",
+   "ok": true,
+   "detail": "{'lines': ['d = df.repartition(\"clinic\").cache()', 'd.count()', 'd.groupBy(\"clinic\").count()'], 'walls_above_the_cache': [], 'exchange_lines_in_explain': 2, 'walls_crossed_by_the_count': []}"
   },
   {
    "name": "slow has two walls: a round-robin deal, then the hash deal the count needs",
@@ -309,6 +395,16 @@
    "name": "explain() shows slow's two Exchange lines",
    "ok": true,
    "detail": ""
+  },
+  {
+   "name": "classic Spark, after line 5 has run: explain() prints the final plan above the starting plan, so each wall's Exchange line appears twice (slow 4, fast 2, kept 2)",
+   "ok": true,
+   "detail": "{'slow': 4, 'fast': 2, 'kept': 2}"
+  },
+  {
+   "name": "over Spark Connect, explain() shows the starting plan before and after line 5 runs (slow 2, fast 1, kept 1)",
+   "ok": true,
+   "detail": "{'before': [2, 1, 1], 'after': [2, 1, 1]}"
   },
   {
    "name": "cast: slow's first wall carries every row, and its second the partial counts",
@@ -339,6 +435,16 @@
    "name": "big: kept's one wall carries every row",
    "ok": true,
    "detail": "[{'rows': 1030000, 'bytes': 163832, 'tasks': 8}]"
+  },
+  {
+   "name": "at scale, partial counts are one per clinic per pile: fast's 8 piles x 5 clinics, slow's 200 x 5",
+   "ok": true,
+   "detail": "([{'rows': 40, 'bytes': 2880, 'tasks': 8}], {'rows': 1000, 'bytes': 72800, 'tasks': 200})"
+  },
+  {
+   "name": "a deal up front can save a wall yet send every row: groupBy(clinic, x), then a window over clinic",
+   "ok": true,
+   "detail": "{'code': 'df.groupBy(\"clinic\", \"x\").count().withColumn(\"m\", F.sum(\"count\").over(Window.partitionBy(\"clinic\")))', 'without': [{'rows': 72, 'bytes': 5512, 'tasks': 8}, {'rows': 9, 'bytes': 457, 'tasks': 1}], 'with_deal_up_front': [{'rows': 1030000, 'bytes': 1791304, 'tasks': 8}]}"
   },
   {
    "name": "at scale, fast moves the fewest bytes, then kept, then slow",

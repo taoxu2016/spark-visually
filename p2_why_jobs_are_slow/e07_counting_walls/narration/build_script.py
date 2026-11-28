@@ -20,7 +20,7 @@ S = [
    [T("Welcome to Spark, Visually. Part Two: why jobs are slow."), T("Today: counting walls.")]),
  ]),
  ("S03_Narrow", "No wall", [
-  ("s3_1", "Five cards: filter, select, withColumn, union, coalesce. For each, arrows run straight down, tray to tray; the wall counter stays at 0, and each runs as one stage. The union card notes: in SQL that is UNION ALL; plain UNION also removes duplicates, and that is a wall.",
+  ("s3_1", "Five cards: filter, select, withColumn, union, coalesce. For filter, select and withColumn, arrows run straight down, tray to tray; union stacks the two tables' trays, 4 and 4 into 8; coalesce's arrows merge neighbouring trays, 4 into 2. The wall counter stays at 0, and each runs as one stage. The union card notes: in SQL that is UNION ALL; plain UNION also removes duplicates, and that is a wall.",
    [T("Some steps send each input pile whole to one output pile. A filter, a select, a new column: each pile is worked where it lies."),
     T("Union just stacks two tables' piles, and coalesce merges neighbours where they stand. No wall, so each runs as a single stage.")]),
  ]),
@@ -34,10 +34,10 @@ S = [
  ]),
  ("S05_Count", "Count from the plan", [
   ("s5_1", "Line 4 types: slow.explain(). Two Exchange lines light: RoundRobinPartitioning(200), then hashpartitioning(clinic, 200). Slow's wall counter: two. A caption: on Databricks Photon compute, a wall can also appear as a PhotonShuffleExchangeSink line; count those too.",
-   [T("You don't have to guess. Ask for the plan, and count the lines that begin with Exchange. Each one is a wall."),
+   [T("You don't have to guess. Ask for the plan before it runs, and count the lines that begin with Exchange. Each one is a wall."),
     T("Slow has two: a re-deal into 200 piles, then the deal by clinic that the count needs anyway.",
       "Slow has two: a re-deal into two hundred piles, then the deal by clinic that the count needs anyway.")]),
-  ("s5_2", "Fast's and kept's plans: one Exchange each. Kept's count needs no second wall: its rows are already dealt by clinic.",
+  ("s5_2", "Fast's and kept's plans: one Exchange each. Kept's count needs no second wall: its rows are already dealt by clinic. A caption: after a run, classic Spark prints the final plan above the starting one, so each wall appears twice; over Spark Connect, explain() shows the starting plan every time.",
    [T("Fast has one. So does kept: it deals by clinic up front, so the count finds each clinic's rows already in one place.")]),
  ]),
  ("S06_Race", "The race", [
@@ -52,16 +52,17 @@ S = [
     T("Fast wins because there are only five clinics, so the partial counts are tiny. With many more groups, they shrink less.")]),
  ]),
  ("S07_Kept", "Already in place", [
-  ("s7_1", "Kept's deal by clinic, with later steps that need clinic lining up behind it, no new wall for them. Beside it, slow's round-robin deal, which no later step needs.",
-   [T("So why deal up front at all? Only when several later steps need rows dealt by the same key: then one wall serves them all. That's episode 17.",
-      "So why deal up front at all? Only when several later steps need rows dealt by the same key: then one wall serves them all. That's episode seventeen."),
+  ("s7_1", "A window over each clinic, then a count per clinic: one wall, Spark's own deal by clinic, which the count reuses; nothing is dealt up front. A small card points ahead to Episode 17: a deal cached once, then a count by clinic on it with no new wall. Beside it, slow's round-robin deal, which no step here needs.",
+   [T("So why deal up front at all? Often you don't need to: when one step follows another on the same key, Spark reuses the first step's deal on its own."),
+    T("Deal once, cache the result, and every pass of a model fit skips a wall: that's episode 17.",
+      "Deal once, cache the result, and every pass of a model fit skips a wall: that's episode seventeen."),
     T("A re-deal into 200 piles, just to be safe, helps no step here.",
       "A re-deal into two hundred piles, just to be safe, helps no step here.")]),
   ("s7_2", "A wide step with no new wall: rows already dealt the right way. A small table copied to every bench, a hint of Episode 8.",
    [T("And a wide step doesn't always build a new wall: not when the rows are already dealt the right way, and, as you'll see, not when a small table is copied instead.")]),
  ]),
  ("S08_Recap", "Recap", [
-  ("s8_1", "Three recap cards: narrow steps work each pile where it lies; wide steps build a wall; count the Exchange lines.",
+  ("s8_1", "Three recap cards: narrow steps work each pile where it lies; wide steps build a wall, unless the rows are already in place; count the plan's Exchange lines, before it runs.",
    [T("Let's gather it up."),
     T("Narrow steps work each pile where it lies. Wide steps build a wall, unless the rows are already in place, and the plan's Exchange lines count them."),
     T("Fewer walls, and less across each: that's a cost you can read from the plan.")]),
@@ -80,6 +81,9 @@ allowed = {"0": "narrow cards' walls", "1": "walls of fast, kept and most wide c
 assert [len(W[k]) for k in ("slow", "fast", "kept")] == [2, 1, 1] and W["slow"][1].startswith("RoundRobinPartitioning(200)")
 assert R["slow"][0]["rows"] == N["cast"]["patients"] * N["scale"] and R["slow"][1]["rows"] == 1000 and R["fast"][0]["rows"] == 40
 assert R["kept"][0]["rows"] == N["cast"]["patients"] * N["scale"] and len(N["answers"]) == 5
+A = N["explain_after_run"]
+assert A["classic"]["exchange_lines"] == {"slow": 4, "fast": 2, "kept": 2} and A["connect"]["after"] == [2, 1, 1]
+assert len(N["follow"]["walls"]) == 1 and not N["cached"]["walls_above_the_cache"] and not N["cached"]["walls_crossed_by_the_count"]
 assert all(c["ok"] for c in N["checks"])
 found = set()
 for _, _, segs in S:
@@ -93,7 +97,7 @@ narr = {
  "series": "Spark, Visually", "arc": "Part II · Why Jobs Are Slow", "episode": 7,
  "title": "Counting Walls", "subtitle": "reading a job's cost from its code",
  "name": "SparkVisually_P2_E07_CountingWalls",
- "status": "Draft 2, revised after the second-model review (see review/e07_review_report.md): for the owner's review. Not voiced.",
+ "status": "Draft 3, revised after the second review, of draft 2 (see review/e07_review_report_2.md): for the owner's review. Not voiced.",
  "voice": {"engine": "kokoro-onnx v1.0", "name": "am_fenrir", "speed": 0.92, "lang": "en-us",
            "pause_between_sentences": 0.32, "tail_pad": 0.15},
  "pronunciations": {},

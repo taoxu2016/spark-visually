@@ -18,7 +18,7 @@ shares. The blueprint plans 19 modules in three parts. Every dataset is simulate
 
 | Part II · Why jobs are slow | Status |
 | --- | --- |
-| 7 · Counting Walls | Script draft 1, in review (pull request) |
+| 7 · Counting Walls | Script draft 3, in review (pull request) |
 
 The review cuts, built in the cloud from this repository, are on the [Review cuts](../../releases/tag/review-cuts) release.
 

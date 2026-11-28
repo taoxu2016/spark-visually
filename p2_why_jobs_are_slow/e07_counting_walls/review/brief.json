@@ -3,13 +3,13 @@
  "question": "Can you predict a job's cost by reading its code?",
  "objective": "The viewer can classify common operations as narrow or wide, count the shuffles in a pipeline before running it, and remove the avoidable ones.",
  "core_concept": "A narrow operation builds each output partition from one input partition: no wall. A wide one needs rows from many partitions: a wall and a shuffle. A pipeline's cost is mostly its number of walls and what crosses each.",
- "focus": "narrow and wide operations, walls counted as shuffle Exchanges in a plan, `union` and `coalesce` as narrow, the join's two walls, `orderBy` against `sortWithinPartitions`, a pointless `repartition(200)`, a deal by the grouping key that the aggregation reuses, and rows and bytes crossing each wall",
+ "focus": "narrow and wide operations, walls counted as shuffle Exchanges in a plan, `union` and `coalesce` as narrow, the join's two walls, `orderBy` against `sortWithinPartitions`, a pointless `repartition(200)`, a deal by the grouping key that the aggregation reuses, a step reusing the deal of the step before it, explain() before and after a run, and rows and bytes crossing each wall",
  "sources": "from Spark's own plans and event log,",
  "misconceptions": [
   "`orderBy` just sorts each partition. (That is `sortWithinPartitions`; `orderBy` is a global sort: a wall plus a sampling job.)",
   "`union` shuffles. (It is narrow: it stacks partitions.)",
   "A wide operation always shuffles. (Not when rows are already partitioned that way, or when a broadcast replaces the shuffle; Episode 8.)",
-  "Repartitioning first speeds up later steps. (Only steps that need that exact partitioning.)"
+  "Repartitioning first speeds up later steps. (Spark already reuses one step's deal for the next step on the same key; a deal up front sends every row, as kept does, and pays when it is cached and reused, Episode 17.)"
  ],
  "earlier_episodes": [
   "Episode 1, Who does the work: the driver runs the notebook's code, plans and schedules; executors read their own files from storage, never through the driver. In a count, each task counts its file's rows and the partial counts go to one final task, which adds them and sends one number (103) to the driver. collect() brings every row to the driver. DataFrame work runs inside the executors; a Python UDF starts Python workers beside each executor.",
@@ -25,22 +25,27 @@
   "The race is told in walls, rows and bytes crossing, all exact. It has no times: this sandbox has one CPU, and the crowd, the blueprint's large simulated table, doesn't exist yet, so the cast ten thousand times over stands in.",
   "A wall is a shuffle Exchange in the plan; a BroadcastExchange is not counted (Episode 8). The join card uses `clinics.hint(\"merge\")` so that both sides are dealt.",
   "Each gallery card runs verbatim, with a no-op write as its action, so its jobs and stages are measured.",
-  "Measured for draft 2: orderBy's sampling job reads every row, so the table is read twice; SQL's UNION ALL builds no wall while plain UNION deals on every column; one deal by clinic serves both a count and a window keyed by clinic.",
-  "S05 carries one Databricks caption, by the owner's decision: on Photon compute a wall can also appear as a PhotonShuffleExchangeSink line (taken from an explain plan in a Databricks talk on Photon, where Spark and Photon nodes can mix; not run here). The narration itself describes open-source Spark.",
+  "Measured for draft 2: orderBy's sampling job reads every row, so the table is read twice; SQL's UNION ALL builds no wall while plain UNION deals on every column.",
+  "Measured for draft 3: union stacks 4 and 4 piles into 8, and coalesce(2) merges neighbouring piles (28 + 25, 25 + 25). After line 5 runs, classic Spark's explain() prints the final plan above the starting plan, so each wall's Exchange line appears twice (slow 4, fast 2, kept 2); over Spark Connect it shows the starting plan (2, 1, 1), before and after. A window over each clinic, then a count per clinic, builds one wall with or without a deal up front. A cached deal by clinic serves a later count with no wall. The second review proposed that a deal up front pays when later steps would each deal again (groupBy on clinic and x, then a window over clinic): it saves that wall but sends every row (1,030,000) instead of 81 partial rows, so s7_1 points to the cached case instead (finer_then_coarser in the numbers).",
+  "S05 carries one Databricks caption, by the owner's decision: on Photon compute a wall can also appear as a PhotonShuffleExchangeSink line (taken from an explain plan in a Databricks talk on Photon, where Spark and Photon nodes can mix; not run here, and awaiting a run on the owner's Photon compute before voicing). The narration itself describes open-source Spark.",
   "The byte figures are this table's: its columns compress very well, so the bytes depend on the data; the rows crossing do not.",
   "Plain words on purpose: a pile is a partition, a wall is the boundary between stages, the cast is the example data. In the On screen notes, a chip is one record, coloured by its clinic; a tray is a pile as drawn; a bench is an executor; the driver desk is the driver; the shelf is storage."
  ],
  "open_questions": [
-  "s4_2: \"orderBy sorts the whole table: one wall, plus an extra job that reads the table once more, to sample the rows and choose the ranges.\" Accurate as worded?",
-  "s7_1: \"Only when several later steps need rows dealt by the same key: then one wall serves them all.\" Accurate as worded, given that a deal on a subset of a step's keys also serves it?",
-  "s6_1: \"Fast sends only partial counts: 40 small rows, one per clinic per pile.\" Accurate for this table (8 piles, 5 clinics)?"
+  "s5_1 and s5_2: \"Ask for the plan before it runs, and count the lines that begin with Exchange.\" with s5_2's caption on plans asked for after a run. Accurate, on classic Spark and over Spark Connect?",
+  "s7_1: \"Often you don't need to: when one step follows another on the same key, Spark reuses the first step's deal on its own.\" Accurate as worded?",
+  "s7_1: \"Deal once, cache the result, and every pass of a model fit skips a wall.\" Accurate as a pointer to a later episode, given the cached measurement?"
  ],
  "plan_blocks": [
   [
    "explain_slow",
    "slow.explain(), as printed (the code panel's line 4)"
+  ],
+  [
+   "explain_after_run.classic.slow",
+   "slow.explain() after line 5 has run, on classic Spark: the final plan, then the starting plan"
   ]
  ],
  "omit_keys": [],
- "stage": "on draft 2. A first\nreview found six things, and all six were changed; check the new wording as closely as the rest."
+ "stage": "on draft 3. A first\nreview found six things and a second found three; all were changed, one with a different fix than the reviewer suggested (measured, and explained under Deliberate choices). Check the new wording as closely as the rest."
 }

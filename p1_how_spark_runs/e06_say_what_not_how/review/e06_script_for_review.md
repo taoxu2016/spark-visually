@@ -1,6 +1,6 @@
 # Episode 6: Say What, Not How · script for review
 
-Draft 2, revised after the second-model review (see review/e06_review_report.md): for the owner's review. Not voiced.
+Script approved by the owner on 28 Nov 2026 (draft 2, revised after the second-model review). Voiced with am_fenrir.
 
 8 scenes, 16 clips, 524 words. Every number comes from `e06_numbers.json`.
 

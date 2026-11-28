@@ -101,7 +101,7 @@ narr = {
  "series": "Spark, Visually", "arc": "Part I · How Spark Runs a Job", "episode": 6,
  "title": "Say What, Not How", "subtitle": "from your code to Spark's plan",
  "name": "SparkVisually_P1_E06_SayWhatNotHow",
- "status": "Draft 2, revised after the second-model review (see review/e06_review_report.md): for the owner's review. Not voiced.",
+ "status": "Script approved by the owner on 28 Nov 2026 (draft 2, revised after the second-model review). Voiced with am_fenrir.",
  "voice": {"engine": "kokoro-onnx v1.0", "name": "am_fenrir", "speed": 0.92, "lang": "en-us",
            "pause_between_sentences": 0.32, "tail_pad": 0.15},
  "pronunciations": {},

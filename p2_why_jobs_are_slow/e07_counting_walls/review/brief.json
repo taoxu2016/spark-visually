@@ -25,13 +25,14 @@
   "The race is told in walls, rows and bytes crossing, all exact. It has no times: this sandbox has one CPU, and the crowd, the blueprint's large simulated table, doesn't exist yet, so the cast ten thousand times over stands in.",
   "A wall is a shuffle Exchange in the plan; a BroadcastExchange is not counted (Episode 8). The join card uses `clinics.hint(\"merge\")` so that both sides are dealt.",
   "Each gallery card runs verbatim, with a no-op write as its action, so its jobs and stages are measured.",
+  "Measured for draft 2: orderBy's sampling job reads every row, so the table is read twice; SQL's UNION ALL builds no wall while plain UNION deals on every column; one deal by clinic serves both a count and a window keyed by clinic.",
   "The byte figures are this table's: its columns compress very well, so the bytes depend on the data; the rows crossing do not.",
   "Plain words on purpose: a pile is a partition, a wall is the boundary between stages, the cast is the example data. In the On screen notes, a chip is one record, coloured by its clinic; a tray is a pile as drawn; a bench is an executor; the driver desk is the driver; the shelf is storage."
  ],
  "open_questions": [
-  "s3_1: \"Union just stacks two tables' piles, and coalesce merges neighbours where they stand.\" Accurate as worded?",
-  "s4_2: \"orderBy sorts the whole table: one wall, plus a small extra job that samples the rows to choose the ranges.\" With adaptive execution on, the card ran 3 jobs against 2 for the other one-wall cards. Accurate as worded?",
-  "s7_1: \"Only when several later steps need the same dealing: then one wall serves them all.\" Is \"the same dealing\" precise enough (the same keys; the number of piles)?"
+  "s4_2: \"orderBy sorts the whole table: one wall, plus an extra job that reads the table once more, to sample the rows and choose the ranges.\" Accurate as worded?",
+  "s7_1: \"Only when several later steps need rows dealt by the same key: then one wall serves them all.\" Accurate as worded, given that a deal on a subset of a step's keys also serves it?",
+  "s6_1: \"Fast sends only partial counts: 40 small rows, one per clinic per pile.\" Accurate for this table (8 piles, 5 clinics)?"
  ],
  "plan_blocks": [
   [
@@ -39,5 +40,6 @@
    "slow.explain(), as printed (the code panel's line 4)"
   ]
  ],
- "omit_keys": []
+ "omit_keys": [],
+ "stage": "on draft 2. A first\nreview found six things, and all six were changed; check the new wording as closely as the rest."
 }

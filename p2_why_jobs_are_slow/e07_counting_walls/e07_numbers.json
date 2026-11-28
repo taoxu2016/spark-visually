@@ -124,7 +124,12 @@
    ],
    "broadcasts": 0,
    "jobs": 3,
-   "stages_run": 3
+   "stages_run": 3,
+   "rows_read_per_job": [
+    103,
+    103,
+    0
+   ]
   }
  ],
  "sort_within": {
@@ -132,6 +137,35 @@
   "walls": [],
   "broadcasts": 0,
   "jobs": 1
+ },
+ "union_sql": [
+  {
+   "code": "spark.sql(\"SELECT * FROM cast UNION ALL SELECT * FROM cast\")",
+   "walls": [],
+   "broadcasts": 0
+  },
+  {
+   "code": "spark.sql(\"SELECT * FROM cast UNION SELECT * FROM cast\")",
+   "walls": [
+    "hashpartitioning(patient#6, clinic#7, x#8, y#9, 200)"
+   ],
+   "broadcasts": 0
+  }
+ ],
+ "reuse": {
+  "lines": [
+   "d = df.repartition(\"clinic\")",
+   "d.groupBy(\"clinic\").count()",
+   "d.withColumn(\"n\", F.count(\"*\").over(Window.partitionBy(\"clinic\")))"
+  ],
+  "walls": [
+   [
+    "hashpartitioning(clinic#7, 200)"
+   ],
+   [
+    "hashpartitioning(clinic#7, 200)"
+   ]
+  ]
  },
  "walls": {
   "slow": [
@@ -145,7 +179,7 @@
    "hashpartitioning(clinic#7, 200)"
   ]
  },
- "explain_slow": "== Physical Plan ==\nAdaptiveSparkPlan isFinalPlan=false\n+- HashAggregate(keys=[clinic#7], functions=[count(1)])\n   +- Exchange hashpartitioning(clinic#7, 200), ENSURE_REQUIREMENTS, [plan_id=667]\n      +- HashAggregate(keys=[clinic#7], functions=[partial_count(1)])\n         +- Exchange RoundRobinPartitioning(200), REPARTITION_BY_NUM, [plan_id=663]\n            +- FileScan parquet [clinic#7] Batched: true, DataFilters: [], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/tmp/sv_e07/cast], PartitionFilters: [], PushedFilters: [], ReadSchema: struct<clinic:string>",
+ "explain_slow": "== Physical Plan ==\nAdaptiveSparkPlan isFinalPlan=false\n+- HashAggregate(keys=[clinic#7], functions=[count(1)])\n   +- Exchange hashpartitioning(clinic#7, 200), ENSURE_REQUIREMENTS, [plan_id=802]\n      +- HashAggregate(keys=[clinic#7], functions=[partial_count(1)])\n         +- Exchange RoundRobinPartitioning(200), REPARTITION_BY_NUM, [plan_id=798]\n            +- FileScan parquet [clinic#7] Batched: true, DataFilters: [], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/tmp/sv_e07/cast], PartitionFilters: [], PushedFilters: [], ReadSchema: struct<clinic:string>",
  "race": {
   "cast": {
    "slow": [
@@ -240,6 +274,21 @@
    "name": "sortWithinPartitions sorts each pile where it lies: no wall",
    "ok": true,
    "detail": "{'code': 'df.sortWithinPartitions(\"patient\")', 'walls': [], 'broadcasts': 0, 'jobs': 1}"
+  },
+  {
+   "name": "orderBy's extra job reads the whole table to sample it: the table is read twice",
+   "ok": true,
+   "detail": "[103, 103, 0]"
+  },
+  {
+   "name": "SQL's UNION ALL stacks piles (no wall); plain UNION removes duplicates, and that is a wall",
+   "ok": true,
+   "detail": "[[], ['hashpartitioning(patient#6, clinic#7, x#8, y#9, 200)']]"
+  },
+  {
+   "name": "one deal by clinic serves two later steps keyed by clinic: no new wall for either",
+   "ok": true,
+   "detail": "[['hashpartitioning(clinic#7, 200)'], ['hashpartitioning(clinic#7, 200)']]"
   },
   {
    "name": "slow has two walls: a round-robin deal, then the hash deal the count needs",

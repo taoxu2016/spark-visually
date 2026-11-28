@@ -2,7 +2,7 @@
 
 Module M7 of the series blueprint: reading a job's cost from its code, by counting its walls. It opens Part II.
 
-**Status: draft 1 of the script, for review: a second model checks Spark accuracy, then the owner. Not voiced.**
+**Status: draft 2 of the script, revised after the second-model review (`review/e07_review_report.md`); for the owner's review. Not voiced.**
 
 | File | What it is |
 | --- | --- |

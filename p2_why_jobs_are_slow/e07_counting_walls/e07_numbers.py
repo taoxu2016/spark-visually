@@ -43,6 +43,11 @@ WIDE = ['df.groupBy("clinic").count()', 'df.distinct()', 'df.join(clinics.hint("
         'df.repartition(4)', 'df.withColumn("n", F.count("*").over(Window.partitionBy("clinic")))',
         'df.orderBy("patient")']                                                               # S04's cards
 SORT_WITHIN = 'df.sortWithinPartitions("patient")'                                             # S04: no wall
+UNION_SQL = ['spark.sql("SELECT * FROM cast UNION ALL SELECT * FROM cast")',                   # S03's note: no wall
+             'spark.sql("SELECT * FROM cast UNION SELECT * FROM cast")']                       # plain UNION: a wall
+REUSE = ['d = df.repartition("clinic")',                                                       # S07: one deal by clinic,
+         'd.groupBy("clinic").count()',                                                        # and two later steps
+         'd.withColumn("n", F.count("*").over(Window.partitionBy("clinic")))']                 # keyed by it
 
 CHECKS: list[tuple[str, bool, str]] = []
 
@@ -79,6 +84,7 @@ def main() -> int:
     tagged("setup.clinics", lambda: spark.createDataFrame([(k, i + 1) for i, k in enumerate(NAMES)], "clinic string, card int")
            .coalesce(1).write.parquet(str(WORK / "clinics")))
     df = spark.read.parquet(str(four))
+    df.createOrReplaceTempView("cast")
     clinics = spark.read.parquet(str(WORK / "clinics"))
     ns = {"spark": spark, "df": df, "F": F, "Window": Window, "clinics": clinics}
     plan_of = lambda q: q._jdf.queryExecution().executedPlan().toString()
@@ -92,6 +98,9 @@ def main() -> int:
     narrow = [card(c, f"narrow{k}") for k, c in enumerate(NARROW)]
     wide = [card(c, f"wide{k}") for k, c in enumerate(WIDE)]
     sortw = card(SORT_WITHIN, "sortwithin")
+    unions = [card(c, f"union_sql{k}") for k, c in enumerate(UNION_SQL)]
+    exec(REUSE[0], ns)
+    reuse = [{"code": c, "walls": walls(plan_of(eval(c, ns)))} for c in REUSE[1:]]
 
     # ---- the code panel, on the cast
     for line in CODE_ON_SCREEN[:3]:
@@ -152,6 +161,16 @@ def main() -> int:
           order["walls"] and order["walls"][0].startswith("rangepartitioning") and order["jobs"] > max(
               c["jobs"] for c in wide if c is not order and len(c["walls"]) == 1), f"{order['walls']}, {order['jobs']} jobs")
     check("sortWithinPartitions sorts each pile where it lies: no wall", not sortw["walls"], str(sortw))
+    order_jobs = sorted(jobs_of(f"wide{WIDE.index(order['code'])}"), key=lambda j: j["job"])
+    def job_reads(j):
+        return sum(t["input_records"] for st in ev[j["desc"]] if st["stage"] in j["ran"] for t in st["tasks"])
+    order["rows_read_per_job"] = [job_reads(j) for j in order_jobs]
+    check("orderBy's extra job reads the whole table to sample it: the table is read twice",
+          order["rows_read_per_job"].count(PATIENTS) == 2, str(order["rows_read_per_job"]))
+    check("SQL's UNION ALL stacks piles (no wall); plain UNION removes duplicates, and that is a wall",
+          not unions[0]["walls"] and len(unions[1]["walls"]) >= 1, str([u["walls"] for u in unions]))
+    check("one deal by clinic serves two later steps keyed by clinic: no new wall for either",
+          all(len(r["walls"]) == 1 for r in reuse), str([r["walls"] for r in reuse]))
 
     w3 = {k: walls(p) for k, p in three.items()}
     check("slow has two walls: a round-robin deal, then the hash deal the count needs",
@@ -181,7 +200,8 @@ def main() -> int:
         "engine": {"spark": SPARK_PIN, "master": MASTER, "cpus": os.cpu_count(), "settings": settings,
                    "note": "local mode: exact plans, walls, jobs, stages, rows and bytes; no durations"},
         "code_on_screen": CODE_ON_SCREEN, "cast": {"patients": PATIENTS, "files": TRAYS, "seed": SEED},
-        "answers": answers[1], "narrow": narrow, "wide": wide, "sort_within": sortw,
+        "answers": answers[1], "narrow": narrow, "wide": wide, "sort_within": sortw, "union_sql": unions,
+        "reuse": {"lines": REUSE, "walls": [r["walls"] for r in reuse]},
         "walls": w3, "explain_slow": explain_slow, "race": race, "scale": SCALE,
         "checks": [{"name": n, "ok": ok, "detail": d} for n, ok, d in CHECKS],
     }

@@ -5,7 +5,7 @@
  "title": "Counting Walls",
  "subtitle": "reading a job's cost from its code",
  "name": "SparkVisually_P2_E07_CountingWalls",
- "status": "Draft 1, for review: a second model checks Spark accuracy, then the owner. Not voiced.",
+ "status": "Draft 2, revised after the second-model review (see review/e07_review_report.md): for the owner's review. Not voiced.",
  "voice": {
   "engine": "kokoro-onnx v1.0",
   "name": "am_fenrir",
@@ -37,7 +37,7 @@
      "visual": "Three cards, one per line; each card's wall counter fills in from Spark's own plan: two, one, one.",
      "sentences": [
       {
-       "text": "Here's a clue you can read straight from the code: how many walls each one builds. Two, one, and one."
+       "text": "Here's a clue you can read straight from Spark's plan: how many walls each one builds. Two, one, and one."
       }
      ]
     }
@@ -67,10 +67,10 @@
    "segments": [
     {
      "id": "s3_1",
-     "visual": "Five cards: filter, select, withColumn, union, coalesce. For each, arrows run straight down, tray to tray; the wall counter stays at 0, and each runs as one stage.",
+     "visual": "Five cards: filter, select, withColumn, union, coalesce. For each, arrows run straight down, tray to tray; the wall counter stays at 0, and each runs as one stage. The union card notes: in SQL that is UNION ALL; plain UNION also removes duplicates, and that is a wall.",
      "sentences": [
       {
-       "text": "Some steps build each output pile from one input pile. A filter, a select, a new column: each pile is worked where it lies."
+       "text": "Some steps send each input pile whole to one output pile. A filter, a select, a new column: each pile is worked where it lies."
       },
       {
        "text": "Union just stacks two tables' piles, and coalesce merges neighbours where they stand. No wall, so each runs as a single stage."
@@ -85,22 +85,22 @@
    "segments": [
     {
      "id": "s4_1",
-     "visual": "Six cards: groupBy, distinct, join, repartition, a window over each clinic, orderBy. Each lights Episode 5's all-to-all lattice across the benches; the wall counter ticks: 1, 1, 2 for the join, 1, 1, 1.",
+     "visual": "Six cards: groupBy, distinct, join, repartition, a window over each clinic, orderBy. Each lights Episode 5's all-to-all lattice across the benches; the wall counter ticks: 1, 1, 2 for the join, 1, 1, 1. The join card shows its hint, .hint(\"merge\"): copying the small table instead is Episode 8.",
      "sentences": [
       {
        "text": "Other steps need rows from every pile: a count per clinic, distinct rows, a join, a re-deal, a window over each clinic, a sort. Each one builds a wall."
       },
       {
-       "text": "A join that deals out both tables builds a wall on each side."
+       "text": "A join that deals out both tables, as this hint asks, builds a wall on each side."
       }
      ]
     },
     {
      "id": "s4_2",
-     "visual": "orderBy's card: its wall, plus an extra job that samples the rows to choose the ranges. Beside it, sortWithinPartitions: no wall.",
+     "visual": "orderBy's card: the shelf is read twice, once by the sampling job and once by the map stage, then one wall. Beside it, sortWithinPartitions: no wall.",
      "sentences": [
       {
-       "text": "Sorting needs care. orderBy sorts the whole table: one wall, plus a small extra job that samples the rows to choose the ranges."
+       "text": "Sorting needs care. orderBy sorts the whole table: one wall, plus an extra job that reads the table once more, to sample the rows and choose the ranges."
       },
       {
        "text": "To sort each pile where it lies, there's sortWithinPartitions, with no wall at all."
@@ -153,8 +153,8 @@
        "say": "Slow sends every row across its first wall, then a thousand partial counts across its second."
       },
       {
-       "text": "Fast sends only partial counts: 40 small rows. Kept sends every row, once.",
-       "say": "Fast sends only partial counts: forty small rows. Kept sends every row, once."
+       "text": "Fast sends only partial counts: 40 small rows, one per clinic per pile. Kept sends every row, once.",
+       "say": "Fast sends only partial counts: forty small rows, one per clinic per pile. Kept sends every row, once."
       }
      ]
     },
@@ -181,12 +181,12 @@
      "visual": "Kept's deal by clinic, with later steps that need clinic lining up behind it, no new wall for them. Beside it, slow's round-robin deal, which no later step needs.",
      "sentences": [
       {
-       "text": "So why deal up front at all? Only when several later steps need the same dealing: then one wall serves them all. That's episode 17.",
-       "say": "So why deal up front at all? Only when several later steps need the same dealing: then one wall serves them all. That's episode seventeen."
+       "text": "So why deal up front at all? Only when several later steps need rows dealt by the same key: then one wall serves them all. That's episode 17.",
+       "say": "So why deal up front at all? Only when several later steps need rows dealt by the same key: then one wall serves them all. That's episode seventeen."
       },
       {
-       "text": "A re-deal into 200 piles, just to be safe, helps no step at all.",
-       "say": "A re-deal into two hundred piles, just to be safe, helps no step at all."
+       "text": "A re-deal into 200 piles, just to be safe, helps no step here.",
+       "say": "A re-deal into two hundred piles, just to be safe, helps no step here."
       }
      ]
     },
@@ -213,10 +213,10 @@
        "text": "Let's gather it up."
       },
       {
-       "text": "Narrow steps work each pile where it lies. Wide steps build a wall, and the plan's Exchange lines count them."
+       "text": "Narrow steps work each pile where it lies. Wide steps build a wall, unless the rows are already in place, and the plan's Exchange lines count them."
       },
       {
-       "text": "Fewer walls, and less across each: that's a cost you can read from the code."
+       "text": "Fewer walls, and less across each: that's a cost you can read from the plan."
       }
      ]
     },

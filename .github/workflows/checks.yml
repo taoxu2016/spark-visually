@@ -12,7 +12,7 @@ jobs:
         with: {python-version: "3.12"}
       - name: Rebuild every script and review prompt, and fail if anything changes
         run: |
-          for ep in p1_how_spark_runs/e*/; do
+          for ep in p*/e*/; do
             python "$ep/narration/build_script.py"
             python tools/review_prompt.py "$ep"
           done
@@ -25,12 +25,13 @@ jobs:
       fail-fast: false
       matrix:
         episode:
-          - e01_who_does_the_work
-          - e02_piles_of_records
-          - e03_nothing_happens_until_you_ask
-          - e04_cut_at_the_walls
-          - e05_everyone_sends_to_everyone
-          - e06_say_what_not_how
+          - p1_how_spark_runs/e01_who_does_the_work
+          - p1_how_spark_runs/e02_piles_of_records
+          - p1_how_spark_runs/e03_nothing_happens_until_you_ask
+          - p1_how_spark_runs/e04_cut_at_the_walls
+          - p1_how_spark_runs/e05_everyone_sends_to_everyone
+          - p1_how_spark_runs/e06_say_what_not_how
+          - p2_why_jobs_are_slow/e07_counting_walls
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -39,5 +40,5 @@ jobs:
         with: {python-version: "3.12"}
       - run: pip install -r requirements-numbers.txt
       - name: Run the episode's numbers file (every check must pass)
-        working-directory: p1_how_spark_runs/${{ matrix.episode }}
+        working-directory: ${{ matrix.episode }}
         run: python e*_numbers.py

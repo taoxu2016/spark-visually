@@ -16,6 +16,10 @@ shares. The blueprint plans 19 modules in three parts. Every dataset is simulate
 | 5 · Everyone Sends to Everyone | Approved and reviewed; cut 4:54 (the pilot) |
 | 6 · Say What, Not How | Approved and reviewed; cut 3:31 |
 
+| Part II · Why jobs are slow | Status |
+| --- | --- |
+| 7 · Counting Walls | Script draft 3, in review (pull request) |
+
 The review cuts, built in the cloud from this repository, are on the [Review cuts](../../releases/tag/review-cuts) release.
 
 ## How an episode is made
@@ -36,7 +40,7 @@ The review cuts, built in the cloud from this repository, are on the [Review cut
 sv/                          the series' shared library: the cast, the home shot, the board, the event-log reader
 tools/review_prompt.py       builds an episode's review prompt
 external/model-in-motion     Model in Motion's tools, pinned (a submodule)
-p1_how_spark_runs/eNN_*/     one folder per episode:
+p1_how_spark_runs/eNN_*/     one folder per episode (Part II in p2_why_jobs_are_slow/):
     eNN_numbers.py / .json     the measured facts
     narration/                 build_script.py and narration.json
     episode/episodeNN.py       the scenes

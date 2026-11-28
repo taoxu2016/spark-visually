@@ -2,7 +2,7 @@
 
 Module M6 of the series blueprint: how a DataFrame or SQL query becomes the plan Spark runs. It closes Part I.
 
-**Status: script approved by the owner (draft 2, after the second-model review in `review/e06_review_report.md`), voiced with am_fenrir (3:13 of speech) and animated; the cut is with the owner for review.**
+**Status: script approved by the owner (draft 2, after the second-model review in `review/e06_review_report.md`), voiced with am_fenrir (3:13 of speech) and animated; the cut (3:31) is approved.**
 
 | File | What it is |
 | --- | --- |

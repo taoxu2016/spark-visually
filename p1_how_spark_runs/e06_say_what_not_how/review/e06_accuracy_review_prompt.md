@@ -2,15 +2,15 @@
 
 You are reviewing the script of one episode of *Spark, Visually*, an animated video series that shows what an Apache
 Spark cluster does when PySpark code runs. Its viewers write PySpark on Databricks but have never watched a job run.
-Another model wrote the script. You are the independent second opinion on technical accuracy, before the series' owner
-reviews it. Review accuracy only, not style or pacing.
+Another model wrote the script. You are the independent second opinion on technical accuracy, on draft 2. A first
+review found six things, and all six were changed; check the new wording as closely as the rest. Review accuracy only, not style or pacing.
 
 ## Ground rules
 
 - Check every claim against Apache Spark 4.3.0 as the run below used it: PySpark in local mode, default settings
   unless stated, adaptive query execution on. If your knowledge rests on an earlier release, say which. Where
   Databricks Runtime would behave differently in a way a Databricks user would notice, say so.
-- The measured facts below were captured from Spark's own plans and event log, through Spark Connect as well as a classic session, and, for bytes, from the Parquet file's own metadata (the sizes of its column chunks), by the episode's numbers
+- The measured facts below were captured from Spark's own plans and event log, through Spark Connect as well as a classic session, and, for the column data a query needs, from the Parquet file's own metadata (the sizes of its column chunks), by the episode's numbers
   file, and every check listed there passed. Treat them as what this run did. If one looks wrong to you, explain why
   and how to check it.
 - Judge each sentence as a viewer would take it. A claim that is true of this example but sounds like a general rule
@@ -81,10 +81,11 @@ The cast: 103 simulated patients in five clinics (Alder, Birch, Cedar, Dune, Elm
 ### Deliberate choices (not errors)
 
 - The blueprint's crowd (a wide simulated registry) doesn't exist yet, so the storage scene uses the cast ten thousand times over, sorted by risk; "three of twenty columns" becomes two of four. The narration says the sizes belong to this sorted file.
-- Bytes come from the file's own metadata: the column chunks the reader fetches for the columns in the scan's ReadSchema, in the row groups it reads. The event log's bytes-read metric gave inconsistent figures in local mode, so it is not used.
+- The storage scene's sizes are the column data the query needs, from the file's own metadata: the column chunks of the columns in the scan's ReadSchema, in the row groups it reads. They are labelled so on screen. The reader itself fetches more on this tiny file, because it reads through a 64 KiB buffer; the event log's bytes read record that, and are kept in the facts and not said.
 - The SQL names its count (`AS count`) so both forms name the column alike; the plans are compared with Spark's expression ids and plan ids set aside.
 - The blueprint's constant-folding example is replaced by a rewrite this plan really shows: the inferred `isnotnull(x)`.
-- Pushdown switched off appears on a settings card (`spark.conf.set("spark.sql.parquet.filterPushdown", False)`), run verbatim.
+- Pushdown switched off appears on a settings card (`spark.conf.set("spark.sql.parquet.filterPushdown", False)`), and the reordering example on another card (`df.groupBy("clinic").count().filter(F.col("clinic") == "Birch")`); both run verbatim. The code panel prints both formatted plans and the four phases (`q1.explain(True)`).
+- The physical-plan scene comes before the storage scene, because handing the filter to the read happens in physical planning, not in the optimiser.
 - No durations: the UDF's cost is told in rows read and rows sent to Python.
 - Plain words on purpose: a pile is a partition, a wall is the boundary between stages, the cast is the example data. In the On screen notes, a chip is one record, coloured by its clinic; a tray is a pile as drawn; a bench is an executor; the driver desk is the driver; the shelf is storage.
 
@@ -96,7 +97,8 @@ These lines run verbatim in the numbers file, in this order.
 q1 = df.filter(F.col("x") == 1).groupBy("clinic").count()
 q2 = spark.sql("""SELECT clinic, count(*) AS count
                  FROM cast WHERE x = 1 GROUP BY clinic""")
-q1.explain("formatted")
+q1.explain("formatted"); q2.explain("formatted")
+q1.explain(True)
 df.filter(F.col("xx") == 1)
 hi = F.udf(lambda x: x == 1, "boolean")
 df.filter(hi("x")).groupBy("clinic").count().collect()
@@ -104,7 +106,7 @@ df.filter(hi("x")).groupBy("clinic").count().collect()
 
 ## Measured facts
 
-### q1.explain("formatted"), before any run (the code panel's line 4)
+### q1.explain("formatted"), before any run (the code panel's line 4; q2's is the same, ids aside)
 
 ```text
 == Physical Plan ==
@@ -180,16 +182,25 @@ Aggregate [clinic#5], [clinic#5, count(1) AS count#9L]
       +- Relation [patient#4,clinic#5,x#6,y#7] parquet
 ```
 
+### the reordering card's optimised plan
+
+```text
+Aggregate [clinic#5], [clinic#5, count(1) AS count#31L]
++- Project [clinic#5]
+   +- Filter (isnotnull(clinic#5) AND (clinic#5 = Birch))
+      +- Relation [patient#4,clinic#5,x#6,y#7] parquet
+```
+
 ### the UDF version's physical plan
 
 ```text
 AdaptiveSparkPlan isFinalPlan=false
-+- HashAggregate(keys=[clinic#5], functions=[count(1)], output=[clinic#5, count#32L])
-   +- Exchange hashpartitioning(clinic#5, 200), ENSURE_REQUIREMENTS, [plan_id=226]
-      +- HashAggregate(keys=[clinic#5], functions=[partial_count(1)], output=[clinic#5, count#40L])
++- HashAggregate(keys=[clinic#5], functions=[count(1)], output=[clinic#5, count#40L])
+   +- Exchange hashpartitioning(clinic#5, 200), ENSURE_REQUIREMENTS, [plan_id=283]
+      +- HashAggregate(keys=[clinic#5], functions=[partial_count(1)], output=[clinic#5, count#48L])
          +- Project [clinic#5]
-            +- Filter pythonUDF0#38: boolean
-               +- ArrowEvalPython [<lambda>(x#6)#31], [pythonUDF0#38], 101
+            +- Filter pythonUDF0#46: boolean
+               +- ArrowEvalPython [<lambda>(x#6)#39], [pythonUDF0#46], 101
                   +- FileScan parquet [clinic#5,x#6] Batched: true, DataFilters: [], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/tmp/sv_e06/cast], PartitionFilters: [], PushedFilters: [], ReadSchema: struct<clinic:string,x:int>
 ```
 
@@ -204,8 +215,9 @@ Ids, counts and orders are exact; fields in milliseconds come from a one-CPU mac
  "episode": 6,
  "title": "Say What, Not How",
  "engine": {"spark": "4.3.0", "master": "local[8]", "cpus": 1, "settings": {"spark.sql.adaptive.enabled": "true", "spark.sql.parquet.filterPushdown": "true", "spark.sql.shuffle.partitions": "200"}, "note": "local mode: exact plans, rows, bytes and row groups; no durations"},
- "statements": [[0, 1], [1, 3], [3, 4], [4, 5], [5, 6], [6, 7]],
+ "statements": [[0, 1], [1, 3], [3, 4], [4, 5], [5, 6], [6, 7], [7, 8]],
  "card_pushdown_off": "spark.conf.set(\"spark.sql.parquet.filterPushdown\", False)",
+ "card_reorder": "df.groupBy(\"clinic\").count().filter(F.col(\"clinic\") == \"Birch\")",
  "cast": {"patients": 103, "files": 4, "seed": 2026, "columns": 4},
  "counts": {"Alder": 6, "Cedar": 10, "Dune": 6, "Birch": 24},
  "same_plan": true,
@@ -213,11 +225,14 @@ Ids, counts and orders are exact; fields in milliseconds come from a one-CPU mac
  "pushed_filters": "IsNotNull(x), EqualTo(x,1)",
  "formatted_nodes": ["Scan parquet", "Filter", "Project", "HashAggregate", "Exchange", "HashAggregate", "AdaptiveSparkPlan"],
  "misspelt": {"error": "AnalysisException", "unresolved_column": true},
- "connect": {"error_at_transformation": null, "error_at_action": "AnalysisException: UNRESOLVED_COLUMN"},
+ "connect": {"dataframe_at_its_line": null, "dataframe_when_columns_are_asked": "AnalysisException: UNRESOLVED_COLUMN", "dataframe_at_count": "AnalysisException: UNRESOLVED_COLUMN", "sql_at_its_call": "AnalysisException: UNRESOLVED_COLUMN"},
  "udf": {"node": "ArrowEvalPython", "pushed_filters": "", "rows_to_python": 103},
- "storage": {"scale": 10000, "rows": 1030000, "row_group_bytes": 524288, "row_groups": 25, "row_groups_that_may_hold_x1": 12, "groups": [{"rows": 38976, "x_min": 0, "x_max": 0, "chunk_bytes": {"patient": 156083, "clinic": 108, "x": 103, "y": 103}}, {"rows": 38976, "x_min": 0, "x_max": 0, "chunk_bytes": {"patient": 156099, "clinic": 108, "x": 103, "y": 103}}, {"rows": 38976, "x_min": 0, "x_max": 0, "chunk_bytes": {"patient": 156081, "clinic": 108, "x": 103, "y": 111}}, {"rows": 38976, "x_min": 0, "x_max": 0, "chunk_bytes": {"patient": 156080, "clinic": 108, "x": 103, "y": 103}}, {"rows": 38976, "x_min": 0, "x_max": 0, "chunk_bytes": {"patient": 156087, "clinic": 108, "x": 103, "y": 103}}, {"rows": 38976, "x_min": 0, "x_max": 0, "chunk_bytes": {"patient": 156090, "clinic": 108, "x": 103, "y": 103}}, {"rows": 38976, "x_min": 0, "x_max": 0, "chunk_bytes": {"patient": 156095, "clinic": 121, "x": 103, "y": 114}}, {"rows": 38976, "x_min": 0, "x_max": 0, "chunk_bytes": {"patient": 156085, "clinic": 121, "x": 103, "y": 110}}, {"rows": 38976, "x_min": 0, "x_max": 0, "chunk_bytes": {"patient": 156094, "clinic": 108, "x": 103, "y": 112}}, {"rows": 38976, "x_min": 0, "x_max": 0, "chunk_bytes": {"patient": 156085, "clinic": 108, "x": 103, "y": 103}}, {"rows": 57901, "x_min": 0, "x_max": 0, "chunk_bytes": {"patient": 231871, "clinic": 162, "x": 142, "y": 155}}, {"rows": 58312, "x_min": 0, "x_max": 0, "chunk_bytes": {"patient": 233522, "clinic": 159, "x": 142, "y": 142}}, {"rows": 58372, "x_min": 0, "x_max": 0, "chunk_bytes": {"patient": 233766, "clinic": 145, "x": 142, "y": 142}}, {"rows": 39078, "x_min": 0, "x_max": 1, "chunk_bytes": {"patient": 156501, "clinic": 120, "x": 111, "y": 111}}, {"rows": 38976, "x_min": 1, "x_max": 1, "chunk_bytes": {"patient": 156082, "clinic": 121, "x": 103, "y": 115}}, {"rows": 38976, "x_min": 1, "x_max": 1, "chunk_bytes": {"patient": 156077, "clinic": 108, "x": 103, "y": 103}}, {"rows": 38976, "x_min": 1, "x_max": 1, "chunk_bytes": {"patient": 156084, "clinic": 108, "x": 103, "y": 103}}, {"rows": 38976, "x_min": 1, "x_max": 1, "chunk_bytes": {"patient": 156082, "clinic": 108, "x": 103, "y": 103}}, {"rows": 38976, "x_min": 1, "x_max": 1, "chunk_bytes": {"patient": 156091, "clinic": 108, "x": 103, "y": 111}}, {"rows": 38976, "x_min": 1, "x_max": 1, "chunk_bytes": {"patient": 156092, "clinic": 108, "x": 103, "y": 103}}, {"rows": 38976, "x_min": 1, "x_max": 1, "chunk_bytes": {"patient": 156085, "clinic": 121, "x": 103, "y": 110}}, {"rows": 38976, "x_min": 1, "x_max": 1, "chunk_bytes": {"patient": 156085, "clinic": 108, "x": 103, "y": 103}}, {"rows": 38976, "x_min": 1, "x_max": 1, "chunk_bytes": {"patient": 156097, "clinic": 108, "x": 103, "y": 111}}, {"rows": 57792, "x_min": 1, "x_max": 1, "chunk_bytes": {"patient": 231440, "clinic": 160, "x": 142, "y": 150}}, {"rows": 18001, "x_min": 1, "x_max": 1, "chunk_bytes": {"patient": 72096, "clinic": 68, "x": 64, "y": 72}}], "reads": {"query": {"rows": 465655, "bytes": 767762}, "no_pushdown": {"rows": 1030000, "bytes": 16148}, "all_columns": {"rows": 465655, "bytes": 767762}, "udf": {"rows": 1030000, "bytes": 16148}}, "columns_read": ["clinic", "x"], "chunk_bytes_fetched": {"query": 2590, "no_pushdown": 5618, "all_columns": 1868697, "everything": 4133267}},
+ "storage": {"scale": 10000, "rows": 1030000, "row_group_bytes": 524288, "row_groups": 25, "row_groups_that_may_hold_x1": 12, "groups": [{"rows": 38976, "x_min": 0, "x_max": 0, "chunk_bytes": {"patient": 156083, "clinic": 108, "x": 103, "y": 103}}, {"rows": 38976, "x_min": 0, "x_max": 0, "chunk_bytes": {"patient": 156099, "clinic": 108, "x": 103, "y": 103}}, {"rows": 38976, "x_min": 0, "x_max": 0, "chunk_bytes": {"patient": 156081, "clinic": 108, "x": 103, "y": 111}}, {"rows": 38976, "x_min": 0, "x_max": 0, "chunk_bytes": {"patient": 156080, "clinic": 108, "x": 103, "y": 103}}, {"rows": 38976, "x_min": 0, "x_max": 0, "chunk_bytes": {"patient": 156087, "clinic": 108, "x": 103, "y": 103}}, {"rows": 38976, "x_min": 0, "x_max": 0, "chunk_bytes": {"patient": 156090, "clinic": 108, "x": 103, "y": 103}}, {"rows": 38976, "x_min": 0, "x_max": 0, "chunk_bytes": {"patient": 156095, "clinic": 121, "x": 103, "y": 114}}, {"rows": 38976, "x_min": 0, "x_max": 0, "chunk_bytes": {"patient": 156085, "clinic": 121, "x": 103, "y": 110}}, {"rows": 38976, "x_min": 0, "x_max": 0, "chunk_bytes": {"patient": 156094, "clinic": 108, "x": 103, "y": 112}}, {"rows": 38976, "x_min": 0, "x_max": 0, "chunk_bytes": {"patient": 156085, "clinic": 108, "x": 103, "y": 103}}, {"rows": 57901, "x_min": 0, "x_max": 0, "chunk_bytes": {"patient": 231871, "clinic": 162, "x": 142, "y": 155}}, {"rows": 58312, "x_min": 0, "x_max": 0, "chunk_bytes": {"patient": 233522, "clinic": 159, "x": 142, "y": 142}}, {"rows": 58372, "x_min": 0, "x_max": 0, "chunk_bytes": {"patient": 233766, "clinic": 145, "x": 142, "y": 142}}, {"rows": 39078, "x_min": 0, "x_max": 1, "chunk_bytes": {"patient": 156501, "clinic": 120, "x": 111, "y": 111}}, {"rows": 38976, "x_min": 1, "x_max": 1, "chunk_bytes": {"patient": 156082, "clinic": 121, "x": 103, "y": 115}}, {"rows": 38976, "x_min": 1, "x_max": 1, "chunk_bytes": {"patient": 156077, "clinic": 108, "x": 103, "y": 103}}, {"rows": 38976, "x_min": 1, "x_max": 1, "chunk_bytes": {"patient": 156084, "clinic": 108, "x": 103, "y": 103}}, {"rows": 38976, "x_min": 1, "x_max": 1, "chunk_bytes": {"patient": 156082, "clinic": 108, "x": 103, "y": 103}}, {"rows": 38976, "x_min": 1, "x_max": 1, "chunk_bytes": {"patient": 156091, "clinic": 108, "x": 103, "y": 111}}, {"rows": 38976, "x_min": 1, "x_max": 1, "chunk_bytes": {"patient": 156092, "clinic": 108, "x": 103, "y": 103}}, {"rows": 38976, "x_min": 1, "x_max": 1, "chunk_bytes": {"patient": 156085, "clinic": 121, "x": 103, "y": 110}}, {"rows": 38976, "x_min": 1, "x_max": 1, "chunk_bytes": {"patient": 156085, "clinic": 108, "x": 103, "y": 103}}, {"rows": 38976, "x_min": 1, "x_max": 1, "chunk_bytes": {"patient": 156097, "clinic": 108, "x": 103, "y": 111}}, {"rows": 57792, "x_min": 1, "x_max": 1, "chunk_bytes": {"patient": 231440, "clinic": 160, "x": 142, "y": 150}}, {"rows": 18001, "x_min": 1, "x_max": 1, "chunk_bytes": {"patient": 72096, "clinic": 68, "x": 64, "y": 72}}], "reads": {"query": {"rows": 465655, "bytes": 767762}, "no_pushdown": {"rows": 1030000, "bytes": 16148}, "all_columns": {"rows": 465655, "bytes": 767762}, "udf": {"rows": 1030000, "bytes": 16148}}, "columns_read": ["clinic", "x"], "column_bytes_needed": {"query": 2590, "no_pushdown": 5618, "all_columns": 1868697, "everything": 4133267}, "note": "column_bytes_needed come from the file's metadata; reads[...].bytes are what the reader fetched (64 KiB buffered reads), kept and not said"},
+ "reorder": {"card": "df.groupBy(\"clinic\").count().filter(F.col(\"clinic\") == \"Birch\")", "rows": {"Birch": 30}},
  "checks": [
   {"name": "pinned engine: Apache Spark 4.3.0", "ok": true, "detail": "4.3.0"},
+  {"name": "the panel prints both formatted plans, and they match with ids set aside", "ok": true, "detail": ""},
+  {"name": "explain(True) prints all four phases", "ok": true, "detail": ""},
   {"name": "the DataFrame and SQL forms give the same answer", "ok": true, "detail": "{'Alder': 6, 'Cedar': 10, 'Dune': 6, 'Birch': 24}"},
   {"name": "SQL and DataFrame code reach the same optimised plan", "ok": true, "detail": ""},
   {"name": "and the same physical plan", "ok": true, "detail": ""},
@@ -225,18 +240,21 @@ Ids, counts and orders are exact; fields in milliseconds come from a one-CPU mac
   {"name": "DataFrame code is analysed as each line is written: its plan already carries types and ids (x#n)", "ok": true, "detail": ""},
   {"name": "a misspelt column fails at analysis, on its own line, before any job", "ok": true, "detail": "{'error': 'AnalysisException', 'unresolved_column': True}"},
   {"name": "the optimiser adds a step nobody wrote: isnotnull(x)", "ok": true, "detail": ""},
+  {"name": "the optimised plan still has the Filter over the whole relation: pushdown and the two-column read are decided in physical planning", "ok": true, "detail": ""},
+  {"name": "the optimiser keeps only what the query needs: a Project of clinic over the filter", "ok": true, "detail": ""},
+  {"name": "written after the count, the filter runs before it: the optimiser moves it below the aggregate", "ok": true, "detail": "{'Birch': 30}"},
   {"name": "the scan reads 2 of the table's 4 columns (pruning)", "ok": true, "detail": "struct<clinic:string,x:int>"},
   {"name": "the filter is pushed into the scan", "ok": true, "detail": "IsNotNull(x), EqualTo(x,1)"},
   {"name": "the physical plan splits the count around an Exchange: partial, then final", "ok": true, "detail": "['Scan parquet', 'Filter', 'Project', 'HashAggregate', 'Exchange', 'HashAggregate', 'AdaptiveSparkPlan']"},
   {"name": "explain() before any action shows the starting plan", "ok": true, "detail": ""},
   {"name": "the UDF version gives the same answer", "ok": true, "detail": "{'Alder': 6, 'Cedar': 10, 'Dune': 6, 'Birch': 24}"},
   {"name": "with the UDF, a Python node evaluates the filter and nothing about x is pushed down", "ok": true, "detail": "ArrowEvalPython; PushedFilters: []"},
-  {"name": "over Spark Connect the misspelt column passes its own line and fails at the first action", "ok": true, "detail": "{'error_at_transformation': None, 'error_at_action': 'AnalysisException: UNRESOLVED_COLUMN'}"},
+  {"name": "over Spark Connect, DataFrame code waits until its plan is first needed; a SQL string still fails at once", "ok": true, "detail": "{'dataframe_at_its_line': None, 'dataframe_when_columns_are_asked': 'AnalysisException: UNRESOLVED_COLUMN', 'dataframe_at_count': 'AnalysisException: UNRESOLVED_COLUMN', 'sql_at_its_call': 'AnalysisException: UNRESOLVED_COLUMN'}"},
   {"name": "the panel's first five statements run no job: building, comparing and explaining plans moves no rows", "ok": true, "detail": ""},
   {"name": "the UDF line reads every patient and sends each one to Python", "ok": true, "detail": "{'rows': 103, 'bytes': 5224}"},
   {"name": "with pushdown, only the row groups whose statistics allow x = 1 are read", "ok": true, "detail": "465,655 of 1,030,000"},
   {"name": "without pushdown every row group is read", "ok": true, "detail": ""},
-  {"name": "pushdown and pruning together fetch a small part of the file", "ok": true, "detail": "{'query': 2590, 'no_pushdown': 5618, 'all_columns': 1868697, 'everything': 4133267}"},
+  {"name": "the column data the query needs is a small part of the file's", "ok": true, "detail": "{'query': 2590, 'no_pushdown': 5618, 'all_columns': 1868697, 'everything': 4133267}"},
   {"name": "the UDF version reads every row: its filter can't be pushed down", "ok": true, "detail": ""}
  ]
 }
@@ -250,7 +268,7 @@ Each clip is one stretch of voiceover. "On screen" describes the animation; "Nar
 
 - **s1_1**. On screen: The code panel types one question two ways: the DataFrame line, then the same question in SQL.
   Narration: “Here's one question, written two ways: as DataFrame code, and as SQL. Higher-risk patients, counted by clinic.”
-- **s1_2**. On screen: Their physical plans appear side by side, node by node; every node matches, and the pairs light together.
+- **s1_2**. On screen: Line 4 glows: both formatted plans appear side by side, node by node; every node matches, and the pairs light together.
   Narration: “Which one runs faster? Neither. Spark turns both into the same plan, step for step.”
 
 ### S02 · Title
@@ -260,36 +278,36 @@ Each clip is one stretch of voiceover. "On screen" describes the animation; "Nar
 
 ### S03 · Analysis
 
-- **s3_1**. On screen: The SQL's first plan on the driver desk: plain names, the table unresolved. Analysis looks each one up in the catalog, and each column gains its type.
+- **s3_1**. On screen: Line 5 glows: q1.explain(True) prints all four phases. The SQL's first plan on the driver desk: plain names, the table unresolved. Analysis looks each one up in the catalog, and each column gains its type.
   Narration: “First, Spark reads what you wrote and looks up every name: the table, and each column, with its type. In classic PySpark, that happens line by line, as you write.”
-- **s3_2**. On screen: Line 5 types: df.filter(F.col("xx") == 1). It fails at once with an unresolved column; no job ran. A caption: over Spark Connect, the same error waits for the first action.
-  Narration: “So a misspelt column fails right there, on its own line, before a single task runs. Over Spark Connect, the same error waits until the first action.”
+- **s3_2**. On screen: Line 6 types: df.filter(F.col("xx") == 1). It fails at once with an unresolved column; no job ran. A caption: over Spark Connect, the same DataFrame line passes, and fails when its plan is first needed (at .count(), say); a SQL string still fails at once.
+  Narration: “So a misspelt column fails right there, on its own line, before a single task runs. Over Spark Connect, DataFrame code waits until its plan is first needed, but a SQL string still fails at once.”
 
 ### S04 · The optimiser
 
-- **s4_1**. On screen: The analysed plan on the desk: count per clinic, filter, read. The filter slides down into the read, and a new step appears beside it: isnotnull(x).
-  Narration: “Then the optimiser rewrites the plan. It pushes the filter down into the read, and adds a check you never wrote: that x isn't null.”
-- **s4_2**. On screen: The read's column list: patient, clinic, x, y. Patient and y fade out; clinic and x stay.
-  Narration: “It also drops every column nobody asked for. This query needs only clinic and x, so the read takes 2 of the 4. You said what you wanted. Spark chose the steps, and their order.”
+- **s4_1**. On screen: The analysed plan on the desk: count per clinic, filter, read. A new step appears beside the filter, isnotnull(x), and a projection of clinic slides in above it.
+  Narration: “Then the optimiser rewrites the plan. It adds a check you never wrote: that x isn't null. And it keeps only what the query needs: clinic, for the count.”
+- **s4_2**. On screen: A card runs df.groupBy("clinic").count().filter(F.col("clinic") == "Birch"): in the plan, the filter written last slides below the count.
+  Narration: “It reorders what's safe to reorder, too. Write a filter on clinic after the count, and the optimiser moves it before: fewer rows to count. You said what you wanted. Spark chose the steps.”
 
-### S05 · Down to storage
+### S05 · The physical plan
 
-- **s5_1**. On screen: The cast scaled up ten thousand times, sorted by risk, written as one Parquet file of 25 row groups; each group shows the smallest and largest x it holds.
-  Narration: “Here's why that pays. Take the cast ten thousand times over, sorted by risk, in one file of 25 row groups. Each group records the smallest and largest x it holds.”
-- **s5_2**. On screen: With pushdown, the 13 groups whose largest x is 0 grey out, and 12 are read. Only clinic and x leave the shelf: about 2.6 kB, against 1.9 MB for every column of those groups. A settings card turns pushdown off, and all 25 groups are read.
-  Narration: “With the filter pushed down, the reader skips the 13 groups that can't hold a higher-risk patient. Of the 12 it reads, it fetches just two columns: about 2.6 kilobytes, where all four would be nearly 2 megabytes. Those sizes belong to this sorted file. Unsorted, every group holds both kinds, and nothing is skipped. Turn pushdown off, and every group is read.”
+- **s5_1**. On screen: The physical plan on the desk: the read is handed a copy of the filter and reads 2 of the 4 columns (patient and y fade from it); the filter stays above the read; the single count splits into a partial count, an Exchange and a final count, with Episode 4's wall between.
+  Narration: “Last, Spark picks real operators. It hands the read a copy of the filter, so the read can skip what can't match, and has it read only 2 of the 4 columns. The filter still runs after the read, to be sure. And the one count becomes two: a partial count on each pile, an exchange, and a final count. That's Episode 4's wall.”
+- **s5_2**. On screen: Line 4 glows again: q1.explain("formatted"). Its nodes light from the bottom: Scan parquet with its PushedFilters and ReadSchema, Filter, Project, HashAggregate, Exchange, HashAggregate, AdaptiveSparkPlan.
+  Narration: “Explain, formatted, shows the physical plan, node by node: the scan, with the filters it was handed and the two columns it reads; then the filter, the partial count, the exchange, and the final count. Before a run, it's the starting plan: adaptive execution can still change it. That's episode 12.”
 
-### S06 · The physical plan
+### S06 · Down to storage
 
-- **s6_1**. On screen: The single count on the desk splits in two: a partial count before an Exchange, a final count after it, with Episode 4's wall between.
-  Narration: “Last, Spark picks real operators. The one count becomes two: a partial count on each pile, an exchange, and a final count. That's Episode 4's wall.”
-- **s6_2**. On screen: Line 4 types: q1.explain("formatted"). Its nodes light from the bottom: Scan parquet with its pushed filters and read schema, Filter, Project, HashAggregate, Exchange, HashAggregate, AdaptiveSparkPlan.
-  Narration: “Explain, formatted, shows it all, node by node. The scan lists the filters it took and the two columns it reads. Then the filter, the partial count, the exchange, and the final count. Before a run, it's the starting plan: adaptive execution can still change it. That's episode 12.”
+- **s6_1**. On screen: The cast scaled up ten thousand times, sorted by risk, written as one Parquet file of 25 row groups; each group shows the smallest and largest x it holds.
+  Narration: “Here's why handing the filter down pays. Take the cast ten thousand times over, sorted by risk, in one file of 25 row groups. Each group records the smallest and largest x it holds.”
+- **s6_2**. On screen: With pushdown, the 13 groups whose largest x is 0 grey out, and 12 are read. Only clinic and x are needed: about 2.6 kB of column data, against 1.9 MB for every column of those groups, labelled: column sizes, from the file's metadata. A settings card turns pushdown off, and all 25 groups are read.
+  Narration: “With the filter handed down, the reader skips the 13 groups that can't hold a higher-risk patient. Of the 12 it reads, it needs just two columns: about 2.6 kilobytes of column data, where all four would be nearly 2 megabytes. Those sizes belong to this sorted file. Unsorted, every group holds both kinds, and nothing is skipped. Turn pushdown off, and every group is read.”
 
 ### S07 · A black box
 
-- **s7_1**. On screen: Lines 6 and 7 type: the same filter as a Python function. The read's pushed filters are now empty; a Python worker appears beside each bench, and every row goes out to it and back.
-  Narration: “Now write the same filter as a Python function. To Spark, it's a black box. It can't push the filter into the read, so every row is read, and every row travels to Python and back, just to be checked.”
+- **s7_1**. On screen: Lines 7 and 8 type: the same filter as a Python function. The read's pushed filters are now empty; a Python worker appears beside each bench. The rows stay on the bench: only x goes out to the worker, and a tick comes back.
+  Narration: “Now write the same filter as a Python function. To Spark, it's a black box. It can't hand the filter to the read, so every row is read, and for every row the value it checks, x, travels to Python and back, just to be checked.”
 - **s7_2**. On screen: On the scaled file: all 25 row groups read, against 12.
   Narration: “On our sorted file, that's all 25 row groups instead of 12. Keep your logic where the optimiser can see it.”
 
@@ -304,6 +322,6 @@ Each clip is one stretch of voiceover. "On screen" describes the animation; "Nar
 
 ## Open questions
 
-1. s3_1: "In classic PySpark, that happens line by line, as you write." DataFrame code is analysed as each line builds its DataFrame, and the SQL when `spark.sql()` is called. Accurate as worded for both forms?
-2. s5_2: the 2.6 kB against nearly 2 MB is the size of the column chunks in the row groups read, from the file's metadata. Is that a fair measure of what the reader fetches?
-3. s7_1: "Every row travels to Python and back, just to be checked." With Arrow batches carrying the rows, is that accurate as worded?
+1. s5_1: "It hands the read a copy of the filter, so the read can skip what can't match, and has it read only 2 of the 4 columns. The filter still runs after the read, to be sure." Accurate for Spark 4.3's file sources?
+2. s4_2: "Write a filter on clinic after the count, and the optimiser moves it before: fewer rows to count." Accurate as worded?
+3. s3_2: "Over Spark Connect, DataFrame code waits until its plan is first needed, but a SQL string still fails at once." Accurate as worded?

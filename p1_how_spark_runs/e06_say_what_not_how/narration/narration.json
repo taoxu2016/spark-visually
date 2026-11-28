@@ -5,7 +5,7 @@
  "title": "Say What, Not How",
  "subtitle": "from your code to Spark's plan",
  "name": "SparkVisually_P1_E06_SayWhatNotHow",
- "status": "Draft 1, for review: a second model checks Spark accuracy, then the owner. Not voiced.",
+ "status": "Draft 2, revised after the second-model review (see review/e06_review_report.md): for the owner's review. Not voiced.",
  "voice": {
   "engine": "kokoro-onnx v1.0",
   "name": "am_fenrir",
@@ -31,7 +31,7 @@
     },
     {
      "id": "s1_2",
-     "visual": "Their physical plans appear side by side, node by node; every node matches, and the pairs light together.",
+     "visual": "Line 4 glows: both formatted plans appear side by side, node by node; every node matches, and the pairs light together.",
      "sentences": [
       {
        "text": "Which one runs faster? Neither. Spark turns both into the same plan, step for step."
@@ -64,7 +64,7 @@
    "segments": [
     {
      "id": "s3_1",
-     "visual": "The SQL's first plan on the driver desk: plain names, the table unresolved. Analysis looks each one up in the catalog, and each column gains its type.",
+     "visual": "Line 5 glows: q1.explain(True) prints all four phases. The SQL's first plan on the driver desk: plain names, the table unresolved. Analysis looks each one up in the catalog, and each column gains its type.",
      "sentences": [
       {
        "text": "First, Spark reads what you wrote and looks up every name: the table, and each column, with its type."
@@ -76,13 +76,13 @@
     },
     {
      "id": "s3_2",
-     "visual": "Line 5 types: df.filter(F.col(\"xx\") == 1). It fails at once with an unresolved column; no job ran. A caption: over Spark Connect, the same error waits for the first action.",
+     "visual": "Line 6 types: df.filter(F.col(\"xx\") == 1). It fails at once with an unresolved column; no job ran. A caption: over Spark Connect, the same DataFrame line passes, and fails when its plan is first needed (at .count(), say); a SQL string still fails at once.",
      "sentences": [
       {
        "text": "So a misspelt column fails right there, on its own line, before a single task runs."
       },
       {
-       "text": "Over Spark Connect, the same error waits until the first action."
+       "text": "Over Spark Connect, DataFrame code waits until its plan is first needed, but a SQL string still fails at once."
       }
      ]
     }
@@ -94,39 +94,71 @@
    "segments": [
     {
      "id": "s4_1",
-     "visual": "The analysed plan on the desk: count per clinic, filter, read. The filter slides down into the read, and a new step appears beside it: isnotnull(x).",
+     "visual": "The analysed plan on the desk: count per clinic, filter, read. A new step appears beside the filter, isnotnull(x), and a projection of clinic slides in above it.",
      "sentences": [
       {
-       "text": "Then the optimiser rewrites the plan. It pushes the filter down into the read, and adds a check you never wrote: that x isn't null."
+       "text": "Then the optimiser rewrites the plan. It adds a check you never wrote: that x isn't null. And it keeps only what the query needs: clinic, for the count."
       }
      ]
     },
     {
      "id": "s4_2",
-     "visual": "The read's column list: patient, clinic, x, y. Patient and y fade out; clinic and x stay.",
+     "visual": "A card runs df.groupBy(\"clinic\").count().filter(F.col(\"clinic\") == \"Birch\"): in the plan, the filter written last slides below the count.",
      "sentences": [
       {
-       "text": "It also drops every column nobody asked for. This query needs only clinic and x, so the read takes 2 of the 4.",
-       "say": "It also drops every column nobody asked for. This query needs only clinic and x, so the read takes two of the four."
+       "text": "It reorders what's safe to reorder, too. Write a filter on clinic after the count, and the optimiser moves it before: fewer rows to count."
       },
       {
-       "text": "You said what you wanted. Spark chose the steps, and their order."
+       "text": "You said what you wanted. Spark chose the steps."
       }
      ]
     }
    ]
   },
   {
-   "id": "S05_Storage",
-   "chapter": "Down to storage",
+   "id": "S05_Physical",
+   "chapter": "The physical plan",
    "segments": [
     {
      "id": "s5_1",
+     "visual": "The physical plan on the desk: the read is handed a copy of the filter and reads 2 of the 4 columns (patient and y fade from it); the filter stays above the read; the single count splits into a partial count, an Exchange and a final count, with Episode 4's wall between.",
+     "sentences": [
+      {
+       "text": "Last, Spark picks real operators. It hands the read a copy of the filter, so the read can skip what can't match, and has it read only 2 of the 4 columns. The filter still runs after the read, to be sure.",
+       "say": "Last, Spark picks real operators. It hands the read a copy of the filter, so the read can skip what can't match, and has it read only two of the four columns. The filter still runs after the read, to be sure."
+      },
+      {
+       "text": "And the one count becomes two: a partial count on each pile, an exchange, and a final count. That's Episode 4's wall.",
+       "say": "And the one count becomes two: a partial count on each pile, an exchange, and a final count. That's Episode four's wall."
+      }
+     ]
+    },
+    {
+     "id": "s5_2",
+     "visual": "Line 4 glows again: q1.explain(\"formatted\"). Its nodes light from the bottom: Scan parquet with its PushedFilters and ReadSchema, Filter, Project, HashAggregate, Exchange, HashAggregate, AdaptiveSparkPlan.",
+     "sentences": [
+      {
+       "text": "Explain, formatted, shows the physical plan, node by node: the scan, with the filters it was handed and the two columns it reads; then the filter, the partial count, the exchange, and the final count."
+      },
+      {
+       "text": "Before a run, it's the starting plan: adaptive execution can still change it. That's episode 12.",
+       "say": "Before a run, it's the starting plan: adaptive execution can still change it. That's episode twelve."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "S06_Storage",
+   "chapter": "Down to storage",
+   "segments": [
+    {
+     "id": "s6_1",
      "visual": "The cast scaled up ten thousand times, sorted by risk, written as one Parquet file of 25 row groups; each group shows the smallest and largest x it holds.",
      "sentences": [
       {
-       "text": "Here's why that pays. Take the cast ten thousand times over, sorted by risk, in one file of 25 row groups.",
-       "say": "Here's why that pays. Take the cast ten thousand times over, sorted by risk, in one file of twenty-five row groups."
+       "text": "Here's why handing the filter down pays. Take the cast ten thousand times over, sorted by risk, in one file of 25 row groups.",
+       "say": "Here's why handing the filter down pays. Take the cast ten thousand times over, sorted by risk, in one file of twenty-five row groups."
       },
       {
        "text": "Each group records the smallest and largest x it holds."
@@ -134,12 +166,12 @@
      ]
     },
     {
-     "id": "s5_2",
-     "visual": "With pushdown, the 13 groups whose largest x is 0 grey out, and 12 are read. Only clinic and x leave the shelf: about 2.6 kB, against 1.9 MB for every column of those groups. A settings card turns pushdown off, and all 25 groups are read.",
+     "id": "s6_2",
+     "visual": "With pushdown, the 13 groups whose largest x is 0 grey out, and 12 are read. Only clinic and x are needed: about 2.6 kB of column data, against 1.9 MB for every column of those groups, labelled: column sizes, from the file's metadata. A settings card turns pushdown off, and all 25 groups are read.",
      "sentences": [
       {
-       "text": "With the filter pushed down, the reader skips the 13 groups that can't hold a higher-risk patient. Of the 12 it reads, it fetches just two columns: about 2.6 kilobytes, where all four would be nearly 2 megabytes.",
-       "say": "With the filter pushed down, the reader skips the thirteen groups that can't hold a higher-risk patient. Of the twelve it reads, it fetches just two columns: about two point six kilobytes, where all four would be nearly two megabytes."
+       "text": "With the filter handed down, the reader skips the 13 groups that can't hold a higher-risk patient. Of the 12 it reads, it needs just two columns: about 2.6 kilobytes of column data, where all four would be nearly 2 megabytes.",
+       "say": "With the filter handed down, the reader skips the thirteen groups that can't hold a higher-risk patient. Of the twelve it reads, it needs just two columns: about two point six kilobytes of column data, where all four would be nearly two megabytes."
       },
       {
        "text": "Those sizes belong to this sorted file. Unsorted, every group holds both kinds, and nothing is skipped."
@@ -152,47 +184,18 @@
    ]
   },
   {
-   "id": "S06_Physical",
-   "chapter": "The physical plan",
-   "segments": [
-    {
-     "id": "s6_1",
-     "visual": "The single count on the desk splits in two: a partial count before an Exchange, a final count after it, with Episode 4's wall between.",
-     "sentences": [
-      {
-       "text": "Last, Spark picks real operators. The one count becomes two: a partial count on each pile, an exchange, and a final count. That's Episode 4's wall.",
-       "say": "Last, Spark picks real operators. The one count becomes two: a partial count on each pile, an exchange, and a final count. That's Episode four's wall."
-      }
-     ]
-    },
-    {
-     "id": "s6_2",
-     "visual": "Line 4 types: q1.explain(\"formatted\"). Its nodes light from the bottom: Scan parquet with its pushed filters and read schema, Filter, Project, HashAggregate, Exchange, HashAggregate, AdaptiveSparkPlan.",
-     "sentences": [
-      {
-       "text": "Explain, formatted, shows it all, node by node. The scan lists the filters it took and the two columns it reads. Then the filter, the partial count, the exchange, and the final count."
-      },
-      {
-       "text": "Before a run, it's the starting plan: adaptive execution can still change it. That's episode 12.",
-       "say": "Before a run, it's the starting plan: adaptive execution can still change it. That's episode twelve."
-      }
-     ]
-    }
-   ]
-  },
-  {
    "id": "S07_UDF",
    "chapter": "A black box",
    "segments": [
     {
      "id": "s7_1",
-     "visual": "Lines 6 and 7 type: the same filter as a Python function. The read's pushed filters are now empty; a Python worker appears beside each bench, and every row goes out to it and back.",
+     "visual": "Lines 7 and 8 type: the same filter as a Python function. The read's pushed filters are now empty; a Python worker appears beside each bench. The rows stay on the bench: only x goes out to the worker, and a tick comes back.",
      "sentences": [
       {
        "text": "Now write the same filter as a Python function. To Spark, it's a black box."
       },
       {
-       "text": "It can't push the filter into the read, so every row is read, and every row travels to Python and back, just to be checked."
+       "text": "It can't hand the filter to the read, so every row is read, and for every row the value it checks, x, travels to Python and back, just to be checked."
       }
      ]
     },

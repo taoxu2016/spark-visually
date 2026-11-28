@@ -36,30 +36,33 @@ CODE_ON_SCREEN = [
     'q1 = df.filter(F.col("x") == 1).groupBy("clinic").count()',     # S01: the question, as DataFrame code
     'q2 = spark.sql("""SELECT clinic, count(*) AS count',             # S01: the same question, as SQL
     '                 FROM cast WHERE x = 1 GROUP BY clinic""")',
-    'q1.explain("formatted")',                                        # S06: the plan, node by node
+    'q1.explain("formatted"); q2.explain("formatted")',              # S01 and S05: the physical plans, node by node
+    'q1.explain(True)',                                               # S03 and S04: parsed, analysed, optimised, physical
     'df.filter(F.col("xx") == 1)',                                    # S03: a misspelt column
     'hi = F.udf(lambda x: x == 1, "boolean")',                        # S07: the same filter, as a Python UDF
     'df.filter(hi("x")).groupBy("clinic").count().collect()',
 ]
-STATEMENTS = [(0, 1), (1, 3), (3, 4), (4, 5), (5, 6), (6, 7)]          # panel lines that make one statement
-CARD_PUSHDOWN_OFF = 'spark.conf.set("spark.sql.parquet.filterPushdown", False)'   # S05's settings card
+STATEMENTS = [(0, 1), (1, 3), (3, 4), (4, 5), (5, 6), (6, 7), (7, 8)]  # panel lines that make one statement
+CARD_PUSHDOWN_OFF = 'spark.conf.set("spark.sql.parquet.filterPushdown", False)'   # S06's settings card
+CARD_REORDER = 'df.groupBy("clinic").count().filter(F.col("clinic") == "Birch")'  # S04's card: written last, run first
 
 CONNECT_RUN = r'''
 import json, sys
 from pyspark.sql import SparkSession, functions as F
 spark = SparkSession.builder.remote("local[4]").getOrCreate()
 df = spark.read.parquet(sys.argv[1])
+df.createOrReplaceTempView("cast")
 out = {}
-try:
-    bad = df.filter(F.col("xx") == 1)
-    out["error_at_transformation"] = None
-except Exception as e:
-    out["error_at_transformation"] = type(e).__name__
-try:
-    bad.count()
-    out["error_at_action"] = None
-except Exception as e:
-    out["error_at_action"] = type(e).__name__ + (": UNRESOLVED_COLUMN" if "UNRESOLVED_COLUMN" in str(e) else "")
+def attempt(key, f):
+    try:
+        f(); out[key] = None
+    except Exception as e:
+        out[key] = type(e).__name__ + (": UNRESOLVED_COLUMN" if "UNRESOLVED_COLUMN" in str(e) else "")
+bad = {}
+attempt("dataframe_at_its_line", lambda: bad.setdefault("df", df.filter(F.col("xx") == 1)))
+attempt("dataframe_when_columns_are_asked", lambda: bad["df"].columns)
+attempt("dataframe_at_count", lambda: bad["df"].count())
+attempt("sql_at_its_call", lambda: spark.sql("SELECT clinic FROM cast WHERE xx = 1"))
 spark.stop()
 print("CONNECT_RESULT " + json.dumps(out))
 '''
@@ -103,13 +106,15 @@ def main() -> int:
     ns = {"spark": spark, "df": df, "F": F}
 
     # ---- the code panel, statement by statement
-    printed, misspelt = io.StringIO(), None
+    misspelt = None
     for k, (a, b) in enumerate(STATEMENTS):
         code = "\n".join(CODE_ON_SCREEN[a:b])
         tag = f"line{a + 1}"
         if "explain" in code:
-            with contextlib.redirect_stdout(printed):
+            buf = io.StringIO()
+            with contextlib.redirect_stdout(buf):
                 tagged(tag, lambda: exec(code, ns))
+            ns["printed_" + ("extended" if "True" in code else "formatted")] = buf.getvalue()
         elif '"xx"' in code:
             try:
                 tagged(tag, lambda: exec(code, ns))
@@ -119,7 +124,12 @@ def main() -> int:
             ns["udf_rows"] = tagged(tag, lambda: eval(code, ns))
         else:
             tagged(tag, lambda: exec(code, ns))
-    formatted = printed.getvalue().strip()
+    both = ns["printed_formatted"].split("== Physical Plan ==")
+    formatted, formatted_q2 = ("== Physical Plan ==" + both[1]).strip(), ("== Physical Plan ==" + both[2]).strip()
+    extended = ns["printed_extended"]
+    check("the panel prints both formatted plans, and they match with ids set aside", norm(formatted) == norm(formatted_q2))
+    check("explain(True) prints all four phases", all(h in extended for h in (
+          "== Parsed Logical Plan ==", "== Analyzed Logical Plan ==", "== Optimized Logical Plan ==", "== Physical Plan ==")))
     q1, q2 = ns["q1"], ns["q2"]
     counts = {r["clinic"]: r["count"] for r in tagged("q1.collect", lambda: q1.collect())}
     counts2 = {r["clinic"]: r["count"] for r in tagged("q2.collect", lambda: q2.collect())}
@@ -140,6 +150,19 @@ def main() -> int:
           misspelt is not None and misspelt["unresolved_column"], str(misspelt))
     check("the optimiser adds a step nobody wrote: isnotnull(x)",
           "isnotnull(x" in p1["optimized"] and "isnotnull(x" not in p1["analyzed"])
+    check("the optimised plan still has the Filter over the whole relation: pushdown and the two-column read are "
+          "decided in physical planning", "PushedFilters" not in p1["optimized"] and "Relation [patient" in p1["optimized"]
+          and "PushedFilters" in p1["physical"])
+    check("the optimiser keeps only what the query needs: a Project of clinic over the filter",
+          re.search(r"Project \[clinic#\d+\]", p1["optimized"]) is not None)
+    reorder = eval(CARD_REORDER, ns)
+    ro = reorder._jdf.queryExecution()
+    ra, rop = ro.analyzed().toString(), ro.optimizedPlan().toString()
+    first = lambda plan, *ops: min((plan.find(o), o) for o in ops if o in plan)[1]
+    reorder_rows = {r["clinic"]: r["count"] for r in tagged("card.reorder", lambda: reorder.collect())}
+    check("written after the count, the filter runs before it: the optimiser moves it below the aggregate",
+          first(ra, "Filter", "Aggregate") == "Filter" and first(rop, "Filter", "Aggregate") == "Aggregate",
+          f"{reorder_rows}")
 
     read_schema = re.search(r"ReadSchema: (struct<[^>]*>)", formatted)
     pushed = re.search(r"PushedFilters: \[([^\]]*)\]", formatted)
@@ -196,9 +219,10 @@ def main() -> int:
     line = next((ln for ln in r.stdout.splitlines() if ln.startswith("CONNECT_RESULT ")), None)
     assert line, f"Spark Connect run failed:\n{r.stdout[-1500:]}\n{r.stderr[-1500:]}"
     connect = json.loads(line[len("CONNECT_RESULT "):])
-    check("over Spark Connect the misspelt column passes its own line and fails at the first action",
-          connect["error_at_transformation"] is None and (connect["error_at_action"] or "").endswith("UNRESOLVED_COLUMN"),
-          str(connect))
+    check("over Spark Connect, DataFrame code waits until its plan is first needed; a SQL string still fails at once",
+          connect["dataframe_at_its_line"] is None
+          and all((connect[k] or "").endswith("UNRESOLVED_COLUMN") for k in
+                  ("dataframe_when_columns_are_asked", "dataframe_at_count", "sql_at_its_call")), str(connect))
 
     # ------------------------------------------------------------------------- the event log
     ev, J = parse_events(EVENTS), parse_jobs(EVENTS)
@@ -216,13 +240,15 @@ def main() -> int:
     check("with pushdown, only the row groups whose statistics allow x = 1 are read",
           st["query"]["rows"] == sum(g["rows"] for g in may_hold) < total, f"{st['query']['rows']:,} of {total:,}")
     check("without pushdown every row group is read", st["no_pushdown"]["rows"] == total)
-    # Bytes, from the file's own metadata: the reader fetches whole column chunks, only for the columns in the scan's
-    # ReadSchema and only from the row groups it reads (the event log's byte count is unreliable in local mode).
+    # Column data the query needs, from the file's own metadata: the column chunks of the columns in the scan's
+    # ReadSchema, in the row groups it reads. That is not what the reader fetches: it reads through a 64 KiB buffer
+    # (spark.buffer.size), so on chunks this tiny each surviving row group costs about one buffer. The event log's
+    # bytes read (reads[...]["bytes"]) record what it fetched; they are kept, and not said.
     wanted = re.findall(r"(\w+):", read_schema.group(1))
-    fetched = lambda gs, cols: sum(g["chunk_bytes"][c] for g in gs for c in cols)
-    chunk = {"query": fetched(may_hold, wanted), "no_pushdown": fetched(groups, wanted),
-             "all_columns": fetched(may_hold, names_in_file), "everything": fetched(groups, names_in_file)}
-    check("pushdown and pruning together fetch a small part of the file",
+    needed = lambda gs, cols: sum(g["chunk_bytes"][c] for g in gs for c in cols)
+    chunk = {"query": needed(may_hold, wanted), "no_pushdown": needed(groups, wanted),
+             "all_columns": needed(may_hold, names_in_file), "everything": needed(groups, names_in_file)}
+    check("the column data the query needs is a small part of the file's",
           chunk["query"] < chunk["no_pushdown"] < chunk["everything"] and chunk["query"] < chunk["all_columns"], str(chunk))
     check("the UDF version reads every row: its filter can't be pushed down", st["udf"]["rows"] == total)
 
@@ -231,6 +257,7 @@ def main() -> int:
         "engine": {"spark": SPARK_PIN, "master": MASTER, "cpus": os.cpu_count(), "settings": settings,
                    "note": "local mode: exact plans, rows, bytes and row groups; no durations"},
         "code_on_screen": CODE_ON_SCREEN, "statements": STATEMENTS, "card_pushdown_off": CARD_PUSHDOWN_OFF,
+        "card_reorder": CARD_REORDER,
         "cast": {"patients": PATIENTS, "files": TRAYS, "seed": SEED, "columns": columns},
         "counts": counts,
         "plans": {"q1": p1, "q2_parsed": p2["parsed"], "formatted": formatted, "udf_physical": udf_plan},
@@ -239,7 +266,11 @@ def main() -> int:
         "udf": {"node": udf_node, "pushed_filters": udf_pushed.group(1), "rows_to_python": udf_read["rows"]},
         "storage": {"scale": SCALE, "rows": total, "row_group_bytes": ROW_GROUP, "row_groups": len(groups),
                     "row_groups_that_may_hold_x1": len(may_hold), "groups": groups, "reads": st,
-                    "columns_read": wanted, "chunk_bytes_fetched": chunk},
+                    "columns_read": wanted, "column_bytes_needed": chunk,
+                    "note": "column_bytes_needed come from the file's metadata; reads[...].bytes are what the reader "
+                            "fetched (64 KiB buffered reads), kept and not said"},
+        "formatted_q2": formatted_q2, "extended": extended,
+        "reorder": {"card": CARD_REORDER, "analyzed": ra, "optimized": rop, "rows": reorder_rows},
         "checks": [{"name": n, "ok": ok, "detail": d} for n, ok, d in CHECKS],
     }
     (HERE / "e06_numbers.json").write_text(json.dumps(result, indent=1, ensure_ascii=False) + "\n")

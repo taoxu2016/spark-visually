@@ -4,7 +4,7 @@
  "objective": "The viewer can follow a query from parsed to analysed, optimised and physical plan, show that DataFrame and SQL forms give the same plan, and spot column pruning, filter pushdown and the chosen aggregate in `explain(\"formatted\")`.",
  "core_concept": "You describe the result; Catalyst chooses the steps. Because a DataFrame carries a schema and a plan, Spark can move filters, drop unused columns and pick operators, which it cannot do inside a Python function.",
  "focus": "the plan at each phase (parsed, analysed, optimised, physical), DataFrame and SQL reaching the same plan, analysis of names and when a misspelt name fails (classic and over Spark Connect), the optimiser's rewrites (pushdown, the inferred `isnotnull`, column pruning), Parquet row-group skipping and column chunks, the split aggregate, `explain(\"formatted\")`, and a Python UDF blocking pushdown",
- "sources": "from Spark's own plans and event log, through Spark Connect as well as a classic session, and, for bytes, from the Parquet file's own metadata (the sizes of its column chunks),",
+ "sources": "from Spark's own plans and event log, through Spark Connect as well as a classic session, and, for the column data a query needs, from the Parquet file's own metadata (the sizes of its column chunks),",
  "misconceptions": [
   "SQL and DataFrames run differently. (Same optimiser, same plan.)",
   "Spark runs steps in the order I wrote them. (It reorders whatever is safe to reorder.)",
@@ -21,22 +21,23 @@
  "data": "The cast: 103 simulated patients in five clinics (Alder, Birch, Cedar, Dune, Elm), written as four Parquet files that Spark reads as four piles of 28, 25, 25 and 25 rows. Column x = 1 marks a higher-risk patient (46 of the 103); column y marks a readmission (42). The animation always shows a fixed cluster of one driver and four executors with two cores each; the numbers come from one machine in local mode. The table is reached as `cast` (a temporary view over the cast's Parquet files). S05 and S07 also use the cast ten thousand times over (1,030,000 rows), sorted by risk and written as one Parquet file in 512 KB row groups (25 of them).",
  "deliberate_choices": [
   "The blueprint's crowd (a wide simulated registry) doesn't exist yet, so the storage scene uses the cast ten thousand times over, sorted by risk; \"three of twenty columns\" becomes two of four. The narration says the sizes belong to this sorted file.",
-  "Bytes come from the file's own metadata: the column chunks the reader fetches for the columns in the scan's ReadSchema, in the row groups it reads. The event log's bytes-read metric gave inconsistent figures in local mode, so it is not used.",
+  "The storage scene's sizes are the column data the query needs, from the file's own metadata: the column chunks of the columns in the scan's ReadSchema, in the row groups it reads. They are labelled so on screen. The reader itself fetches more on this tiny file, because it reads through a 64 KiB buffer; the event log's bytes read record that, and are kept in the facts and not said.",
   "The SQL names its count (`AS count`) so both forms name the column alike; the plans are compared with Spark's expression ids and plan ids set aside.",
   "The blueprint's constant-folding example is replaced by a rewrite this plan really shows: the inferred `isnotnull(x)`.",
-  "Pushdown switched off appears on a settings card (`spark.conf.set(\"spark.sql.parquet.filterPushdown\", False)`), run verbatim.",
+  "Pushdown switched off appears on a settings card (`spark.conf.set(\"spark.sql.parquet.filterPushdown\", False)`), and the reordering example on another card (`df.groupBy(\"clinic\").count().filter(F.col(\"clinic\") == \"Birch\")`); both run verbatim. The code panel prints both formatted plans and the four phases (`q1.explain(True)`).",
+  "The physical-plan scene comes before the storage scene, because handing the filter to the read happens in physical planning, not in the optimiser.",
   "No durations: the UDF's cost is told in rows read and rows sent to Python.",
   "Plain words on purpose: a pile is a partition, a wall is the boundary between stages, the cast is the example data. In the On screen notes, a chip is one record, coloured by its clinic; a tray is a pile as drawn; a bench is an executor; the driver desk is the driver; the shelf is storage."
  ],
  "open_questions": [
-  "s3_1: \"In classic PySpark, that happens line by line, as you write.\" DataFrame code is analysed as each line builds its DataFrame, and the SQL when `spark.sql()` is called. Accurate as worded for both forms?",
-  "s5_2: the 2.6 kB against nearly 2 MB is the size of the column chunks in the row groups read, from the file's metadata. Is that a fair measure of what the reader fetches?",
-  "s7_1: \"Every row travels to Python and back, just to be checked.\" With Arrow batches carrying the rows, is that accurate as worded?"
+  "s5_1: \"It hands the read a copy of the filter, so the read can skip what can't match, and has it read only 2 of the 4 columns. The filter still runs after the read, to be sure.\" Accurate for Spark 4.3's file sources?",
+  "s4_2: \"Write a filter on clinic after the count, and the optimiser moves it before: fewer rows to count.\" Accurate as worded?",
+  "s3_2: \"Over Spark Connect, DataFrame code waits until its plan is first needed, but a SQL string still fails at once.\" Accurate as worded?"
  ],
  "plan_blocks": [
   [
    "plans.formatted",
-   "q1.explain(\"formatted\"), before any run (the code panel's line 4)"
+   "q1.explain(\"formatted\"), before any run (the code panel's line 4; q2's is the same, ids aside)"
   ],
   [
    "plans.q2_parsed",
@@ -51,12 +52,20 @@
    "q1's optimised plan"
   ],
   [
+   "reorder.optimized",
+   "the reordering card's optimised plan"
+  ],
+  [
    "plans.udf_physical",
    "the UDF version's physical plan"
   ]
  ],
  "omit_keys": [
   "plans.q1.parsed",
-  "plans.q1.physical"
- ]
+  "plans.q1.physical",
+  "formatted_q2",
+  "extended",
+  "reorder.analyzed"
+ ],
+ "stage": "on draft 2. A first\nreview found six things, and all six were changed; check the new wording as closely as the rest."
 }

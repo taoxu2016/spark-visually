@@ -1,0 +1,43 @@
+{
+ "module": "M7 · Counting walls",
+ "question": "Can you predict a job's cost by reading its code?",
+ "objective": "The viewer can classify common operations as narrow or wide, count the shuffles in a pipeline before running it, and remove the avoidable ones.",
+ "core_concept": "A narrow operation builds each output partition from one input partition: no wall. A wide one needs rows from many partitions: a wall and a shuffle. A pipeline's cost is mostly its number of walls and what crosses each.",
+ "focus": "narrow and wide operations, walls counted as shuffle Exchanges in a plan, `union` and `coalesce` as narrow, the join's two walls, `orderBy` against `sortWithinPartitions`, a pointless `repartition(200)`, a deal by the grouping key that the aggregation reuses, and rows and bytes crossing each wall",
+ "sources": "from Spark's own plans and event log,",
+ "misconceptions": [
+  "`orderBy` just sorts each partition. (That is `sortWithinPartitions`; `orderBy` is a global sort: a wall plus a sampling job.)",
+  "`union` shuffles. (It is narrow: it stacks partitions.)",
+  "A wide operation always shuffles. (Not when rows are already partitioned that way, or when a broadcast replaces the shuffle; Episode 8.)",
+  "Repartitioning first speeds up later steps. (Only steps that need that exact partitioning.)"
+ ],
+ "earlier_episodes": [
+  "Episode 1, Who does the work: the driver runs the notebook's code, plans and schedules; executors read their own files from storage, never through the driver. In a count, each task counts its file's rows and the partial counts go to one final task, which adds them and sends one number (103) to the driver. collect() brings every row to the driver. DataFrame work runs inside the executors; a Python UDF starts Python workers beside each executor.",
+  "Episode 2, Piles of records: a partition, called a pile, is the rows one task processes on one core. Reads cut files into piles; data built in code starts as one pile per core; after a shuffle there are 200 piles by default, unless adaptive execution merges small ones. coalesce merges piles where they stand; repartition re-deals every row. A stage ends when its slowest task ends.",
+  "Episode 3, Nothing happens until you ask: transformations add steps to a plan and run nothing; an action runs the whole plan from storage, in one pass per pile, and every action starts again from storage unless something is cached. Its closing line: a count of the filtered rows was one action, yet Spark ran it as 2 jobs and 2 stages.",
+  "Episode 4, Cut at the walls (written after this episode, which was made first as the pilot): Spark cuts a plan into stages where rows are exchanged; one task per pile; between stages stands a wall, and nothing beyond it starts until everything before it is done; with adaptive execution one action can run as several jobs.",
+  "Episode 5, Everyone sends to everyone: in a shuffle, each map task writes its output into bins by destination on its executor's local disk; after the wall, each reduce task fetches its bin from every map task. Partial aggregation sends one count per clinic per pile instead of every row; at scale that cuts the bytes sharply.",
+  "Episode 6, Say what, not how: DataFrame code and SQL reach the same plan. Analysis resolves names; the optimiser adds checks, keeps only what is needed and reorders what is safe; physical planning hands the read a copy of the filter and the columns it needs, and splits an aggregate around an Exchange. A Python UDF hides its logic."
+ ],
+ "data": "The cast: 103 simulated patients in five clinics (Alder, Birch, Cedar, Dune, Elm), written as four Parquet files that Spark reads as four piles of 28, 25, 25 and 25 rows. Column x = 1 marks a higher-risk patient (46 of the 103); column y marks a readmission (42). The animation always shows a fixed cluster of one driver and four executors with two cores each; the numbers come from one machine in local mode. The three versions also run on the cast ten thousand times over (1,030,000 rows, written as Parquet), for the race. `clinics` is a five-row Parquet table, one row per clinic.",
+ "deliberate_choices": [
+  "The blueprint groups by provider; the cast's key is `clinic`, so the episode uses that.",
+  "The race is told in walls, rows and bytes crossing, all exact. It has no times: this sandbox has one CPU, and the crowd, the blueprint's large simulated table, doesn't exist yet, so the cast ten thousand times over stands in.",
+  "A wall is a shuffle Exchange in the plan; a BroadcastExchange is not counted (Episode 8). The join card uses `clinics.hint(\"merge\")` so that both sides are dealt.",
+  "Each gallery card runs verbatim, with a no-op write as its action, so its jobs and stages are measured.",
+  "The byte figures are this table's: its columns compress very well, so the bytes depend on the data; the rows crossing do not.",
+  "Plain words on purpose: a pile is a partition, a wall is the boundary between stages, the cast is the example data. In the On screen notes, a chip is one record, coloured by its clinic; a tray is a pile as drawn; a bench is an executor; the driver desk is the driver; the shelf is storage."
+ ],
+ "open_questions": [
+  "s3_1: \"Union just stacks two tables' piles, and coalesce merges neighbours where they stand.\" Accurate as worded?",
+  "s4_2: \"orderBy sorts the whole table: one wall, plus a small extra job that samples the rows to choose the ranges.\" With adaptive execution on, the card ran 3 jobs against 2 for the other one-wall cards. Accurate as worded?",
+  "s7_1: \"Only when several later steps need the same dealing: then one wall serves them all.\" Is \"the same dealing\" precise enough (the same keys; the number of piles)?"
+ ],
+ "plan_blocks": [
+  [
+   "explain_slow",
+   "slow.explain(), as printed (the code panel's line 4)"
+  ]
+ ],
+ "omit_keys": []
+}

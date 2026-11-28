@@ -1,0 +1,300 @@
+{
+ "series": "Spark, Visually",
+ "part": "II · Why jobs are slow",
+ "episode": 7,
+ "title": "Counting Walls",
+ "engine": {
+  "spark": "4.3.0",
+  "master": "local[8]",
+  "cpus": 1,
+  "settings": {
+   "spark.sql.adaptive.enabled": "true",
+   "spark.sql.shuffle.partitions": "200",
+   "spark.sql.autoBroadcastJoinThreshold": "10485760b"
+  },
+  "note": "local mode: exact plans, walls, jobs, stages, rows and bytes; no durations"
+ },
+ "code_on_screen": [
+  "slow = df.repartition(200).groupBy(\"clinic\").count()",
+  "fast = df.groupBy(\"clinic\").count()",
+  "kept = df.repartition(\"clinic\").groupBy(\"clinic\").count()",
+  "slow.explain()",
+  "[q.collect() for q in (slow, fast, kept)]"
+ ],
+ "cast": {
+  "patients": 103,
+  "files": 4,
+  "seed": 2026
+ },
+ "answers": {
+  "Alder": 30,
+  "Elm": 11,
+  "Cedar": 20,
+  "Dune": 12,
+  "Birch": 30
+ },
+ "narrow": [
+  {
+   "code": "df.filter(F.col(\"x\") == 1)",
+   "walls": [],
+   "broadcasts": 0,
+   "jobs": 1,
+   "stages_run": 1
+  },
+  {
+   "code": "df.select(\"clinic\", \"y\")",
+   "walls": [],
+   "broadcasts": 0,
+   "jobs": 1,
+   "stages_run": 1
+  },
+  {
+   "code": "df.withColumn(\"z\", F.col(\"y\") + 1)",
+   "walls": [],
+   "broadcasts": 0,
+   "jobs": 1,
+   "stages_run": 1
+  },
+  {
+   "code": "df.union(df)",
+   "walls": [],
+   "broadcasts": 0,
+   "jobs": 1,
+   "stages_run": 1
+  },
+  {
+   "code": "df.coalesce(2)",
+   "walls": [],
+   "broadcasts": 0,
+   "jobs": 1,
+   "stages_run": 1
+  }
+ ],
+ "wide": [
+  {
+   "code": "df.groupBy(\"clinic\").count()",
+   "walls": [
+    "hashpartitioning(clinic#7, 200)"
+   ],
+   "broadcasts": 0,
+   "jobs": 2,
+   "stages_run": 2
+  },
+  {
+   "code": "df.distinct()",
+   "walls": [
+    "hashpartitioning(patient#6, clinic#7, x#8, y#9, 200)"
+   ],
+   "broadcasts": 0,
+   "jobs": 2,
+   "stages_run": 2
+  },
+  {
+   "code": "df.join(clinics.hint(\"merge\"), \"clinic\")",
+   "walls": [
+    "hashpartitioning(clinic#7, 200)",
+    "hashpartitioning(clinic#10, 200)"
+   ],
+   "broadcasts": 0,
+   "jobs": 3,
+   "stages_run": 3
+  },
+  {
+   "code": "df.repartition(4)",
+   "walls": [
+    "RoundRobinPartitioning(4)"
+   ],
+   "broadcasts": 0,
+   "jobs": 2,
+   "stages_run": 2
+  },
+  {
+   "code": "df.withColumn(\"n\", F.count(\"*\").over(Window.partitionBy(\"clinic\")))",
+   "walls": [
+    "hashpartitioning(clinic#7, 200)"
+   ],
+   "broadcasts": 0,
+   "jobs": 2,
+   "stages_run": 2
+  },
+  {
+   "code": "df.orderBy(\"patient\")",
+   "walls": [
+    "rangepartitioning(patient#6 ASC NULLS FIRST, 200)"
+   ],
+   "broadcasts": 0,
+   "jobs": 3,
+   "stages_run": 3
+  }
+ ],
+ "sort_within": {
+  "code": "df.sortWithinPartitions(\"patient\")",
+  "walls": [],
+  "broadcasts": 0,
+  "jobs": 1
+ },
+ "walls": {
+  "slow": [
+   "hashpartitioning(clinic#7, 200)",
+   "RoundRobinPartitioning(200)"
+  ],
+  "fast": [
+   "hashpartitioning(clinic#7, 200)"
+  ],
+  "kept": [
+   "hashpartitioning(clinic#7, 200)"
+  ]
+ },
+ "explain_slow": "== Physical Plan ==\nAdaptiveSparkPlan isFinalPlan=false\n+- HashAggregate(keys=[clinic#7], functions=[count(1)])\n   +- Exchange hashpartitioning(clinic#7, 200), ENSURE_REQUIREMENTS, [plan_id=667]\n      +- HashAggregate(keys=[clinic#7], functions=[partial_count(1)])\n         +- Exchange RoundRobinPartitioning(200), REPARTITION_BY_NUM, [plan_id=663]\n            +- FileScan parquet [clinic#7] Batched: true, DataFilters: [], Format: Parquet, Location: InMemoryFileIndex(1 paths)[file:/tmp/sv_e07/cast], PartitionFilters: [], PushedFilters: [], ReadSchema: struct<clinic:string>",
+ "race": {
+  "cast": {
+   "slow": [
+    {
+     "rows": 103,
+     "bytes": 7004,
+     "tasks": 4
+    },
+    {
+     "rows": 90,
+     "bytes": 6390,
+     "tasks": 200
+    }
+   ],
+   "fast": [
+    {
+     "rows": 20,
+     "bytes": 1415,
+     "tasks": 4
+    }
+   ],
+   "kept": [
+    {
+     "rows": 103,
+     "bytes": 1503,
+     "tasks": 4
+    }
+   ]
+  },
+  "big": {
+   "slow": [
+    {
+     "rows": 1030000,
+     "bytes": 331200,
+     "tasks": 8
+    },
+    {
+     "rows": 1000,
+     "bytes": 72800,
+     "tasks": 200
+    }
+   ],
+   "fast": [
+    {
+     "rows": 40,
+     "bytes": 2880,
+     "tasks": 8
+    }
+   ],
+   "kept": [
+    {
+     "rows": 1030000,
+     "bytes": 163832,
+     "tasks": 8
+    }
+   ]
+  }
+ },
+ "scale": 10000,
+ "checks": [
+  {
+   "name": "pinned engine: Apache Spark 4.3.0",
+   "ok": true,
+   "detail": "4.3.0"
+  },
+  {
+   "name": "all three give the same answer",
+   "ok": true,
+   "detail": "{'Alder': 30, 'Elm': 11, 'Cedar': 20, 'Dune': 12, 'Birch': 30}"
+  },
+  {
+   "name": "every narrow card has no wall, and runs as one stage",
+   "ok": true,
+   "detail": "[('df.filter(F.col(\"x\") == 1)', [], 1), ('df.select(\"clinic\", \"y\")', [], 1), ('df.withColumn(\"z\", F.col(\"y\") + 1)', [], 1), ('df.union(df)', [], 1), ('df.coalesce(2)', [], 1)]"
+  },
+  {
+   "name": "every wide card has at least one wall",
+   "ok": true,
+   "detail": "[('df.groupBy(\"clinic\").count()', ['hashpartitioning(clinic#7, 200)']), ('df.distinct()', ['hashpartitioning(patient#6, clinic#7, x#8, y#9, 200)']), ('df.join(clinics.hint(\"merge\"), \"clinic\")', ['hashpartitioning(clinic#7, 200)', 'hashpartitioning(clinic#10, 200)']), ('df.repartition(4)', ['RoundRobinPartitioning(4)']), ('df.withColumn(\"n\", F.count(\"*\").over(Window.partitionBy(\"clinic\")))', ['hashpartitioning(clinic#7, 200)']), ('df.orderBy(\"patient\")', ['rangepartitioning(patient#6 ASC NULLS FIRST, 200)'])]"
+  },
+  {
+   "name": "the sort-merge join has a wall on each side",
+   "ok": true,
+   "detail": "['hashpartitioning(clinic#7, 200)', 'hashpartitioning(clinic#10, 200)']"
+  },
+  {
+   "name": "orderBy is a range wall, and runs an extra job to sample the ranges",
+   "ok": true,
+   "detail": "['rangepartitioning(patient#6 ASC NULLS FIRST, 200)'], 3 jobs"
+  },
+  {
+   "name": "sortWithinPartitions sorts each pile where it lies: no wall",
+   "ok": true,
+   "detail": "{'code': 'df.sortWithinPartitions(\"patient\")', 'walls': [], 'broadcasts': 0, 'jobs': 1}"
+  },
+  {
+   "name": "slow has two walls: a round-robin deal, then the hash deal the count needs",
+   "ok": true,
+   "detail": "['hashpartitioning(clinic#7, 200)', 'RoundRobinPartitioning(200)']"
+  },
+  {
+   "name": "fast has one wall",
+   "ok": true,
+   "detail": "['hashpartitioning(clinic#7, 200)']"
+  },
+  {
+   "name": "kept has one wall: the count finds its rows already dealt by clinic",
+   "ok": true,
+   "detail": "['hashpartitioning(clinic#7, 200)']"
+  },
+  {
+   "name": "explain() shows slow's two Exchange lines",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "cast: slow's first wall carries every row, and its second the partial counts",
+   "ok": true,
+   "detail": "[{'rows': 103, 'bytes': 7004, 'tasks': 4}, {'rows': 90, 'bytes': 6390, 'tasks': 200}]"
+  },
+  {
+   "name": "cast: fast's one wall carries only partial counts",
+   "ok": true,
+   "detail": "[{'rows': 20, 'bytes': 1415, 'tasks': 4}]"
+  },
+  {
+   "name": "cast: kept's one wall carries every row",
+   "ok": true,
+   "detail": "[{'rows': 103, 'bytes': 1503, 'tasks': 4}]"
+  },
+  {
+   "name": "big: slow's first wall carries every row, and its second the partial counts",
+   "ok": true,
+   "detail": "[{'rows': 1030000, 'bytes': 331200, 'tasks': 8}, {'rows': 1000, 'bytes': 72800, 'tasks': 200}]"
+  },
+  {
+   "name": "big: fast's one wall carries only partial counts",
+   "ok": true,
+   "detail": "[{'rows': 40, 'bytes': 2880, 'tasks': 8}]"
+  },
+  {
+   "name": "big: kept's one wall carries every row",
+   "ok": true,
+   "detail": "[{'rows': 1030000, 'bytes': 163832, 'tasks': 8}]"
+  },
+  {
+   "name": "at scale, fast moves the fewest bytes, then kept, then slow",
+   "ok": true,
+   "detail": "{'slow': 404000, 'fast': 2880, 'kept': 163832}"
+  }
+ ]
+}

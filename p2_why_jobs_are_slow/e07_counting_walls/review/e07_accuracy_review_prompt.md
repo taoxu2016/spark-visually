@@ -86,6 +86,7 @@ The cast: 103 simulated patients in five clinics (Alder, Birch, Cedar, Dune, Elm
 - A wall is a shuffle Exchange in the plan; a BroadcastExchange is not counted (Episode 8). The join card uses `clinics.hint("merge")` so that both sides are dealt.
 - Each gallery card runs verbatim, with a no-op write as its action, so its jobs and stages are measured.
 - Measured for draft 2: orderBy's sampling job reads every row, so the table is read twice; SQL's UNION ALL builds no wall while plain UNION deals on every column; one deal by clinic serves both a count and a window keyed by clinic.
+- S05 carries one Databricks caption, by the owner's decision: on Photon compute a wall can also appear as a PhotonShuffleExchangeSink line (taken from an explain plan in a Databricks talk on Photon, where Spark and Photon nodes can mix; not run here). The narration itself describes open-source Spark.
 - The byte figures are this table's: its columns compress very well, so the bytes depend on the data; the rows crossing do not.
 - Plain words on purpose: a pile is a partition, a wall is the boundary between stages, the cast is the example data. In the On screen notes, a chip is one record, coloured by its clinic; a tray is a pile as drawn; a bench is an executor; the driver desk is the driver; the shelf is storage.
 
@@ -208,7 +209,7 @@ Each clip is one stretch of voiceover. "On screen" describes the animation; "Nar
 
 ### S05 · Count from the plan
 
-- **s5_1**. On screen: Line 4 types: slow.explain(). Two Exchange lines light: RoundRobinPartitioning(200), then hashpartitioning(clinic, 200). Slow's wall counter: two.
+- **s5_1**. On screen: Line 4 types: slow.explain(). Two Exchange lines light: RoundRobinPartitioning(200), then hashpartitioning(clinic, 200). Slow's wall counter: two. A caption: on Databricks Photon compute, a wall can also appear as a PhotonShuffleExchangeSink line; count those too.
   Narration: “You don't have to guess. Ask for the plan, and count the lines that begin with Exchange. Each one is a wall. Slow has two: a re-deal into 200 piles, then the deal by clinic that the count needs anyway.”
 - **s5_2**. On screen: Fast's and kept's plans: one Exchange each. Kept's count needs no second wall: its rows are already dealt by clinic.
   Narration: “Fast has one. So does kept: it deals by clinic up front, so the count finds each clinic's rows already in one place.”

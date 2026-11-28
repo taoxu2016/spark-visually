@@ -34,7 +34,7 @@ Draft 2, revised after the second-model review (see review/e07_review_report.md)
 
 | Clip | On screen | Narration |
 | --- | --- | --- |
-| s5_1 | Line 4 types: slow.explain(). Two Exchange lines light: RoundRobinPartitioning(200), then hashpartitioning(clinic, 200). Slow's wall counter: two. | You don't have to guess. Ask for the plan, and count the lines that begin with Exchange. Each one is a wall. Slow has two: a re-deal into 200 piles, then the deal by clinic that the count needs anyway. |
+| s5_1 | Line 4 types: slow.explain(). Two Exchange lines light: RoundRobinPartitioning(200), then hashpartitioning(clinic, 200). Slow's wall counter: two. A caption: on Databricks Photon compute, a wall can also appear as a PhotonShuffleExchangeSink line; count those too. | You don't have to guess. Ask for the plan, and count the lines that begin with Exchange. Each one is a wall. Slow has two: a re-deal into 200 piles, then the deal by clinic that the count needs anyway. |
 | s5_2 | Fast's and kept's plans: one Exchange each. Kept's count needs no second wall: its rows are already dealt by clinic. | Fast has one. So does kept: it deals by clinic up front, so the count finds each clinic's rows already in one place. |
 
 ## S06 · The race

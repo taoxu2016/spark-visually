@@ -115,7 +115,7 @@
    "segments": [
     {
      "id": "s5_1",
-     "visual": "Line 4 types: slow.explain(). Two Exchange lines light: RoundRobinPartitioning(200), then hashpartitioning(clinic, 200). Slow's wall counter: two.",
+     "visual": "Line 4 types: slow.explain(). Two Exchange lines light: RoundRobinPartitioning(200), then hashpartitioning(clinic, 200). Slow's wall counter: two. A caption: on Databricks Photon compute, a wall can also appear as a PhotonShuffleExchangeSink line; count those too.",
      "sentences": [
       {
        "text": "You don't have to guess. Ask for the plan, and count the lines that begin with Exchange. Each one is a wall."

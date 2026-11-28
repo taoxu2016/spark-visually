@@ -33,7 +33,7 @@ S = [
     T("To sort each pile where it lies, there's sortWithinPartitions, with no wall at all.")]),
  ]),
  ("S05_Count", "Count from the plan", [
-  ("s5_1", "Line 4 types: slow.explain(). Two Exchange lines light: RoundRobinPartitioning(200), then hashpartitioning(clinic, 200). Slow's wall counter: two.",
+  ("s5_1", "Line 4 types: slow.explain(). Two Exchange lines light: RoundRobinPartitioning(200), then hashpartitioning(clinic, 200). Slow's wall counter: two. A caption: on Databricks Photon compute, a wall can also appear as a PhotonShuffleExchangeSink line; count those too.",
    [T("You don't have to guess. Ask for the plan, and count the lines that begin with Exchange. Each one is a wall."),
     T("Slow has two: a re-deal into 200 piles, then the deal by clinic that the count needs anyway.",
       "Slow has two: a re-deal into two hundred piles, then the deal by clinic that the count needs anyway.")]),

@@ -26,6 +26,7 @@
   "A wall is a shuffle Exchange in the plan; a BroadcastExchange is not counted (Episode 8). The join card uses `clinics.hint(\"merge\")` so that both sides are dealt.",
   "Each gallery card runs verbatim, with a no-op write as its action, so its jobs and stages are measured.",
   "Measured for draft 2: orderBy's sampling job reads every row, so the table is read twice; SQL's UNION ALL builds no wall while plain UNION deals on every column; one deal by clinic serves both a count and a window keyed by clinic.",
+  "S05 carries one Databricks caption, by the owner's decision: on Photon compute a wall can also appear as a PhotonShuffleExchangeSink line (taken from an explain plan in a Databricks talk on Photon, where Spark and Photon nodes can mix; not run here). The narration itself describes open-source Spark.",
   "The byte figures are this table's: its columns compress very well, so the bytes depend on the data; the rows crossing do not.",
   "Plain words on purpose: a pile is a partition, a wall is the boundary between stages, the cast is the example data. In the On screen notes, a chip is one record, coloured by its clinic; a tray is a pile as drawn; a bench is an executor; the driver desk is the driver; the shelf is storage."
  ],

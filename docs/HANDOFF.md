@@ -8,9 +8,10 @@ For the next working session (written 28 November 2026). Read this, then `README
   findings were fixed; the owner approved every script and cut. The cuts are on the
   [Review cuts](https://github.com/taoxu2016/spark-visually/releases/tag/review-cuts) release.
 - **Episode 7, Counting Walls** (Part II, blueprint M7) is
-  [pull request #2](https://github.com/taoxu2016/spark-visually/pull/2), branch `episode-7`: numbers (21 of 21
-  checks), script **draft 2** (after the second-model review; report in its `review/` folder), and one Photon caption in
-  S05 that the owner asked for. **Next step: the owner's approval of draft 2**, then voice, scenes, cloud build, merge.
+  [pull request #2](https://github.com/taoxu2016/spark-visually/pull/2), branch `episode-7`: numbers (28 of 28
+  checks), script **draft 3** (after two second-model reviews; both reports in its `review/` folder), and one Photon
+  caption in S05 that the owner asked for, still to be run on Photon compute before voicing. **Next step: the owner's
+  approval of draft 3**, then voice, scenes, cloud build, merge.
 - Then Episode 8, **Send the small table** (M8), and on through the blueprint.
 
 ## How an episode is made (the loop that worked)
@@ -39,6 +40,10 @@ For the next working session (written 28 November 2026). Read this, then `README
 3. Task counts include final tasks; stage counts say "ran" (skipped stages exist).
 4. Say what holds for this small example as this example's; say rules only where they hold.
 5. Say where Spark Connect differs (when errors appear, what `explain()` shows, where the plan lives).
+6. Count walls in a plan asked for before a run: once a query has run, classic Spark's `explain()` prints the final plan
+   above the starting plan, so each Exchange appears twice (over Connect it is always the starting plan).
+7. Measure a reviewer's suggested wording as well: Episode 7's second review proposed a case where a deal up front
+   "pays"; it saved a wall but sent every row instead of partial counts.
 Also: Databricks differences are not captioned (owner's decision), with one exception, Episode 7's Photon caption.
 
 ## Owner preferences
@@ -69,6 +74,9 @@ The sandbox reaches github.com, api.github.com and release downloads, but not Ac
 - The "crowd" (a wide simulated registry) does not exist; Episodes 5 to 7 use the cast ten thousand times over.
   Several later modules need it: decide its size and columns before Part III.
 - No license chosen yet for the public repo.
+- Episode 7's Photon caption: run `slow.explain()` on Photon compute and copy the exact shuffle line before voicing.
+- For M17: `explain()` of a query on a cached DataFrame also prints the plan that built the cache, so the cache's deal
+  shows as Exchange lines although the query builds no wall.
 - Blueprint open decisions (in the doc): crowd sizes, covariate groups, Databricks timings for M12 and M19,
   pprof_spark loop check before M16, a reviewer for Part III's statistics.
 
